@@ -5,6 +5,9 @@
 
 package gap;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Random;
 
 public class GapProblem {
     
@@ -16,18 +19,27 @@ public class GapProblem {
     private int[] workerLimitTime;
     private int[][] workerJobCost;
     private int[][] workerJobTime;
+    ArrayList<LinkedList<Integer>> jobDomains = new ArrayList<LinkedList<Integer>>(); 
+    int backtracksCount;
     
     public GapProblem(int _workersCount, int _jobsCount){
         workersCount = _workersCount;
         jobsCount = _jobsCount;
         assignment = new int[jobsCount];
-        for (int i=0; i < jobsCount; i++)
+        for (int i=0; i < jobsCount; i++) {            
             assignment[i] = -1;
+            jobDomains.add(new LinkedList<Integer>());
+            for (int j=0; j < workersCount; j++) {
+                // domains
+                jobDomains.get(i).add(new Integer(j));
+            }
+        }
         workerTotalTime = new int[workersCount];
         workerLimitTime = new int[workersCount];
         workerJobCost = new int[workersCount][jobsCount];
         workerJobTime = new int[workersCount][jobsCount];
         cost = 0;
+        backtracksCount = 0;
     }
     // assign worker to job
     public boolean assign(int job, int worker) {
@@ -45,7 +57,7 @@ public class GapProblem {
         assignment[job] = worker;
         workerTotalTime[worker] += workerJobTime[worker][job];
         cost += workerJobCost[worker][job];
-                    
+
         return true;
     }
     
@@ -62,7 +74,7 @@ public class GapProblem {
         if (update){
             workerTotalTime[prev_worker] -= workerJobTime[prev_worker][job]; 
             cost -= workerJobCost[prev_worker][job];
-        }
+        }       
         return prev_worker;
     }
     
@@ -153,6 +165,44 @@ public class GapProblem {
     public int getLimitTime(int worker){
         return workerLimitTime[worker];
     }
+    
+    public boolean generateRandomSolution(){
+        Random generator = new Random();
+        
+        for (int i = 0; i < jobsCount; i++){
+            if(!jobDomains.get(i).isEmpty()){
+                int pos = generator.nextInt(jobDomains.get(i).size());
+                int worker = jobDomains.get(i).get(pos).intValue();
+                assign(i,worker,true);
+                jobDomains.get(i).remove(pos);
+                arcConsistency(-1); // arc consistency on all not assigned variables
+            } else{
+                i = i - 1; // unassign previous
+                if (i < 0){
+                    return false; // no solution
+                }
+                backtracksCount++;
+                unassign(i);
+                arcConsistency(i);   
+                i = i - 1; // just step back in for cycle to get to the unassign variable       
+            }
+       }
+       return true; 
+    }  
+    //the main idea is to clear infeasible values from not assigned variables except of the ommited one = node we are backtracking to
+    private void arcConsistency(int ommit){
+        for (int i=0; i < jobsCount; i++) {
+            if (assignment[i] != -1 || i == ommit)
+                continue;
+            jobDomains.get(i).clear();
+            for (int j=0; j < workersCount; j++) {
+               if (workerLimitTime[j] >= (workerTotalTime[j] + workerJobTime[j][i]))
+                    jobDomains.get(i).add(new Integer(j));  // this value can be used!         
+            }
+        }        
+    }
+    
+    public int getBacktracksCount(){
+        return backtracksCount;
+    }
 }  
-
-

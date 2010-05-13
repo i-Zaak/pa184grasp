@@ -7,6 +7,7 @@ package gap;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Date;
 
 
 public class Main {
@@ -19,8 +20,14 @@ public class Main {
         System.out.println("Reading information...");
         GapProblem myProblem = parser.parseProblem(5); // 5th example in file
         System.out.println("Done");
-        myProblem.assign(1, 1);
-        
-        System.out.println(myProblem.toString());        
+        long runtime = new Date().getTime();
+        boolean solved = myProblem.generateRandomSolution();
+        runtime = new Date().getTime() - runtime;
+        if (solved){
+            System.out.println(myProblem.toString()); 
+            System.out.println("Solution found in " + runtime + " ms with " + myProblem.getBacktracksCount() + " backtracks"); 
+        }else{
+             System.out.println("No solution:(");  
+        }
     }
 }
