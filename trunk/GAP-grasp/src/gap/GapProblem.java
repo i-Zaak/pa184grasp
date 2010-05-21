@@ -1,20 +1,18 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package gap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
+import java.util.Vector;
 
 public class GapProblem {
     
     private int workersCount;
     private int jobsCount;
-    private int cost;
-    private int[] assignment;
+    private int globalCost;    
+    private int[] assignment; // jobs to workers
     private int[] workerTotalTime;
     private int[] workerLimitTime;
     private int[][] workerJobCost;
@@ -38,7 +36,7 @@ public class GapProblem {
         workerLimitTime = new int[workersCount];
         workerJobCost = new int[workersCount][jobsCount];
         workerJobTime = new int[workersCount][jobsCount];
-        cost = 0;
+        globalCost = 0;
         backtracksCount = 0;
     }
     // assign worker to job
@@ -56,7 +54,7 @@ public class GapProblem {
         
         assignment[job] = worker;
         workerTotalTime[worker] += workerJobTime[worker][job];
-        cost += workerJobCost[worker][job];
+        globalCost += workerJobCost[worker][job];
 
         return true;
     }
@@ -73,7 +71,7 @@ public class GapProblem {
         
         if (update){
             workerTotalTime[prev_worker] -= workerJobTime[prev_worker][job]; 
-            cost -= workerJobCost[prev_worker][job];
+            globalCost -= workerJobCost[prev_worker][job];
         }       
         return prev_worker;
     }
@@ -99,27 +97,27 @@ public class GapProblem {
             }
             output += " total time used: " + workerTotalTime[i] + "/" + workerLimitTime[i] + "\n";
         }
-        output += "Total Cost: " + cost;
+        output += "Total Cost: " + globalCost;
         return output;
     }
             
-    public int getCost(){
-        return cost;
+    public int getGlobalCost(){
+        return globalCost;
     }
     
     public int recountCostAndTime(){
-        cost = 0;
+        globalCost = 0;
         for (int i=0; i < workersCount; i++)
             workerTotalTime[i] = 0;
             
         for (int i=0; i < jobsCount; i++) {
             int worker = assignment[i];
             if (worker != -1){
-                cost += workerJobCost[worker][i];
+                globalCost += workerJobCost[worker][i];
                 workerTotalTime[worker] += workerJobTime[worker][i]; 
             }            
         }
-        return cost;
+        return globalCost;
     }
     
     // are all jobs assigned?
@@ -204,5 +202,48 @@ public class GapProblem {
     
     public int getBacktracksCount(){
         return backtracksCount;
+    }
+    
+    public boolean generateGreedySolution(){
+        Vector<Job> sortedJobs = new Vector<Job>(jobsCount);
+        int minCost, maxCost, bestWorker, cost;
+        for(int job=0; job < jobsCount; job++){
+            minCost = -1;
+            maxCost = -1;
+            bestWorker = -1;
+            
+            for(int worker=0; worker < workersCount; worker++){
+                cost = getCost(worker,job);
+                if(maxCost < cost){
+                    maxCost = cost;
+                    bestWorker = worker;
+                }
+                if(cost < minCost && minCost != -1){
+                    minCost = cost;
+                }
+            }
+            sortedJobs.add(job, new Job(job, maxCost - minCost, bestWorker));
+        }
+        Collections.sort(sortedJobs);
+        System.out.println(sortedJobs);
+        for(int i=0; i < jobsCount; i++){
+            Job job = sortedJobs.get(i);            
+            if(!assign(job.getId(),job.getBestWorkerId())){
+                boolean assigned = false;
+                for(int j=0; j < workersCount; j++){
+                    if(assign(job.getId(),j)){
+                        assigned = true;
+                        break;
+                    }
+                }
+                if(!assigned){
+                    System.out.println("Failed to assign job " + job.getId());
+                    System.out.println("FIXME: implement backtracking in Greedy solution generation!");
+                    return false; 
+                }
+            }
+        }
+        
+        return true;
     }
 }  
