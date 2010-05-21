@@ -10,79 +10,30 @@ import java.util.Vector;
 public class GapProblem {
     
     private int workersCount;
-    private int jobsCount;
-    private int globalCost;    
-    private int[] assignment; // jobs to workers
-    private int[] workerTotalTime;
+    private int jobsCount;  
+    private GapSolution solution;
     private int[] workerLimitTime;
     private int[][] workerJobCost;
     private int[][] workerJobTime;
-    ArrayList<LinkedList<Integer>> jobDomains = new ArrayList<LinkedList<Integer>>(); 
+    private ArrayList<LinkedList<Integer>> jobDomains = new ArrayList<LinkedList<Integer>>(); 
     int backtracksCount;
     
     public GapProblem(int _workersCount, int _jobsCount){
         workersCount = _workersCount;
         jobsCount = _jobsCount;
-        assignment = new int[jobsCount];
+        solution = new GapSolution(jobsCount, workersCount);
         for (int i=0; i < jobsCount; i++) {            
-            assignment[i] = -1;
+            
             jobDomains.add(new LinkedList<Integer>());
             for (int j=0; j < workersCount; j++) {
                 // domains
                 jobDomains.get(i).add(new Integer(j));
             }
         }
-        workerTotalTime = new int[workersCount];
         workerLimitTime = new int[workersCount];
         workerJobCost = new int[workersCount][jobsCount];
         workerJobTime = new int[workersCount][jobsCount];
-        globalCost = 0;
         backtracksCount = 0;
-    }
-    // assign worker to job
-    public boolean assign(int job, int worker) {
-        return assign(job, worker, false);
-    }
-    
-    // assign worker to job, are we accepting infeasible solutions?
-    public boolean assign(int job, int worker, boolean infeasibility){
-        if (assignment[job] != -1) // already assigned
-            return false;
-        
-        if (!infeasibility && (workerTotalTime[worker] + workerJobTime[worker][job]) > workerLimitTime[worker]) 
-            return false; // we don't want infeasible solutions
-        
-        assignment[job] = worker;
-        workerTotalTime[worker] += workerJobTime[worker][job];
-        globalCost += workerJobCost[worker][job];
-
-        return true;
-    }
-    
-    // unassign job
-    public int unassign(int job){
-        return unassign(job, true);
-    }
-    
-    // unassign job, do we want to update cost and time?
-    public int unassign(int job, boolean update){
-        int prev_worker = assignment[job];
-        assignment[job] = -1;
-        
-        if (update){
-            workerTotalTime[prev_worker] -= workerJobTime[prev_worker][job]; 
-            globalCost -= workerJobCost[prev_worker][job];
-        }       
-        return prev_worker;
-    }
-    
-    // is the solution feasible?
-    public boolean feasible() {
-        for (int i=0; i < workersCount; i++) {
-            if (workerTotalTime[i] > workerLimitTime[i])
-                return false;
-        }
-        return true;
     }
     
     @Override // lame, but it will do for now
@@ -91,65 +42,29 @@ public class GapProblem {
         for (int i=0; i < workersCount; i++) {
             output += "worker " + i + ": items: ";
             for (int j=0; j < jobsCount; j++) {
-                if (assignment[j] == i) {
+                if (solution.getWorker(j) == i) {
                     output +=  j + ", ";
                 }                   
             }
-            output += " total time used: " + workerTotalTime[i] + "/" + workerLimitTime[i] + "\n";
+            output += " total time used: " + solution.getWorkerTime(i) + "/" + workerLimitTime[i] + "\n";
         }
-        output += "Total Cost: " + globalCost;
+        output += "Total Cost: " + solution.getGlobalCost();
         return output;
     }
-            
-    public int getGlobalCost(){
-        return globalCost;
-    }
-    
-    public int recountCostAndTime(){
-        globalCost = 0;
-        for (int i=0; i < workersCount; i++)
-            workerTotalTime[i] = 0;
-            
-        for (int i=0; i < jobsCount; i++) {
-            int worker = assignment[i];
-            if (worker != -1){
-                globalCost += workerJobCost[worker][i];
-                workerTotalTime[worker] += workerJobTime[worker][i]; 
-            }            
-        }
-        return globalCost;
-    }
-    
-    // are all jobs assigned?
-    public boolean allAssigned() {
-        for (int i=0; i < jobsCount; i++) {
-            if (assignment[i] == -1){
-                return false;
-            }
-        }    
-        return true;        
-    }
-    
-    // get first job without worker
-    public int getFirstUnassign() {
-        for (int i=0; i < jobsCount; i++) {
-            if (assignment[i] == -1){
-                return i;
-            }
-        }    
-        return -1;        
-    }   
-    
+                           
     public void setWorkerJobCost(int worker, int job, int _cost){
         workerJobCost[worker][job] = _cost;
+        solution.setWorkerJobCost(workerJobCost);
     }
     
     public void setWorkerJobTime(int worker, int job, int _time){
         workerJobTime[worker][job] = _time;
+        solution.setWorkerJobTime(workerJobTime);
     }
     
     public void setWorkerLimitTime(int worker, int _limit){
         workerLimitTime[worker] = _limit;
+        solution.setWorkerLimitTime(workerLimitTime);
     }
     
     public int getTime(int worker, int job){
@@ -163,7 +78,7 @@ public class GapProblem {
     public int getLimitTime(int worker){
         return workerLimitTime[worker];
     }
-    
+       
     public boolean generateRandomSolution(){
         Random generator = new Random();
         
@@ -171,7 +86,7 @@ public class GapProblem {
             if(!jobDomains.get(i).isEmpty()){
                 int pos = generator.nextInt(jobDomains.get(i).size());
                 int worker = jobDomains.get(i).get(pos).intValue();
-                assign(i,worker,true);
+                solution.assign(i,worker,true);
                 jobDomains.get(i).remove(pos);
                 arcConsistency(-1); // arc consistency on all not assigned variables
             } else{
@@ -180,7 +95,7 @@ public class GapProblem {
                     return false; // no solution
                 }
                 backtracksCount++;
-                unassign(i);
+                solution.unassign(i);
                 arcConsistency(i);   
                 i = i - 1; // just step back in for cycle to get to the unassign variable       
             }
@@ -190,11 +105,11 @@ public class GapProblem {
     //the main idea is to clear infeasible values from not assigned variables except of the ommited one = node we are backtracking to
     private void arcConsistency(int ommit){
         for (int i=0; i < jobsCount; i++) {
-            if (assignment[i] != -1 || i == ommit)
+            if (solution.isAssigned(i) || i == ommit)
                 continue;
             jobDomains.get(i).clear();
             for (int j=0; j < workersCount; j++) {
-               if (workerLimitTime[j] >= (workerTotalTime[j] + workerJobTime[j][i]))
+               if (workerLimitTime[j] >= (solution.getWorkerTime(j) + workerJobTime[j][i]))
                     jobDomains.get(i).add(new Integer(j));  // this value can be used!         
             }
         }        
@@ -203,7 +118,7 @@ public class GapProblem {
     public int getBacktracksCount(){
         return backtracksCount;
     }
-    
+       
     public boolean generateGreedySolution(){
         Vector<Job> sortedJobs = new Vector<Job>(jobsCount);
         int minCost, maxCost, bestWorker, cost;
@@ -228,10 +143,10 @@ public class GapProblem {
         System.out.println(sortedJobs);
         for(int i=0; i < jobsCount; i++){
             Job job = sortedJobs.get(i);            
-            if(!assign(job.getId(),job.getBestWorkerId())){
+            if(!solution.assign(job.getId(),job.getBestWorkerId())){
                 boolean assigned = false;
                 for(int j=0; j < workersCount; j++){
-                    if(assign(job.getId(),j)){
+                    if(solution.assign(job.getId(),j)){
                         assigned = true;
                         break;
                     }
@@ -245,5 +160,53 @@ public class GapProblem {
         }
         
         return true;
+    }
+
+    public void clear(){
+      solution.clear();  
+      backtracksCount = 0;   
+    }
+    
+    //shift in solution
+    public boolean perturbate(){
+        int first_worker = solution.getWorker(0);
+        for (int i = 0; i < jobsCount -1; i++){
+            solution.unassign(i);
+            solution.assign(i, solution.getWorker(i+1), true);            
+        }
+        solution.unassign(jobsCount -1);
+        solution.assign(jobsCount -1, first_worker, true);
+        return solution.isFeasible();           
+    }
+    
+    public GapSolution getSolution(){
+        return solution;
+    }
+    
+    public void setSolution(GapSolution _solution){
+        solution = _solution;
+    }
+    
+    //change one worker to get neighbour
+    public GapSolution getBestNeighbour(){
+        int bestCost = solution.getPenalty();
+        GapSolution bestSolution = new GapSolution(solution);
+        for (int i = 0; i < jobsCount; i++){
+            GapSolution neighSolution = new GapSolution(solution);
+            int old_worker = neighSolution.getWorker(i);
+            for (int j = 0; j < workersCount; j++){
+                if (j != old_worker){
+                    neighSolution.unassign(i);
+                    neighSolution.assign(i, j, true);
+                    int cost = neighSolution.getPenalty();
+                    if (cost < bestCost) {
+                        bestSolution = new GapSolution(neighSolution);
+                        bestCost = cost;
+                    }
+                }
+            }
+            
+        }  
+        return bestSolution;
     }
 }  
