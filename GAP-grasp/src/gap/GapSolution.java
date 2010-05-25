@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package gap;
 
 /**
@@ -11,17 +6,15 @@ package gap;
  */
 public class GapSolution {
 
+    private GapProblem problem;
     private int[] assignment; // jobs to workers
     private int jobsCount;
     private int workersCount;
     private int globalCost;
     private int[] workerTotalTime;
     
-    private int[] workerLimitTime;
-    private int[][] workerJobCost;
-    private int[][] workerJobTime;
-      
-    public GapSolution(int _jobsCount, int _workersCount){
+    public GapSolution(int _jobsCount, int _workersCount, GapProblem _problem){
+        problem = _problem;
         jobsCount = _jobsCount;
         assignment = new int[jobsCount];
         for (int i=0; i < jobsCount; i++) {            
@@ -32,15 +25,12 @@ public class GapSolution {
         globalCost = 0;
     }  
     
-    public GapSolution(GapSolution solution){
+    public GapSolution(GapSolution solution, GapProblem problem){
         assignment = solution.getAssignment().clone();
         jobsCount = solution.getJobsCount();
         workersCount = solution.getWorkersCount();
         globalCost = solution.getGlobalCost();
         workerTotalTime = solution.getWorkerTotalTime().clone();
-        workerLimitTime = solution.getWorkerLimitTime().clone();
-        workerJobCost = solution.getWorkerJobCost().clone();
-        workerJobTime = solution.getWorkerJobTime().clone();
     }
       
     // are all jobs assigned?
@@ -91,12 +81,12 @@ public class GapSolution {
         if (isAssigned(job)) // already assigned
             return false;
         
-        if (!infeasibility && (getWorkerTime(worker) + workerJobTime[worker][job]) > workerLimitTime[worker]) 
+        if (!infeasibility && (getWorkerTime(worker) + problem.getTime(worker, job) ) > problem.getLimitTime(worker)) 
             return false; // we don't want infeasible solutions
         
         assignment[job] = worker;
-        workerTotalTime[worker] += workerJobTime[worker][job];
-        globalCost += workerJobCost[worker][job];
+        workerTotalTime[worker] += problem.getTime(worker, job);
+        globalCost += problem.getCost(worker, job);
 
         return true;
     }
@@ -112,8 +102,8 @@ public class GapSolution {
         removeWorker(job);
         
         if (update){
-            workerTotalTime[prev_worker] -= workerJobTime[prev_worker][job]; 
-            globalCost -= workerJobCost[prev_worker][job];
+            workerTotalTime[prev_worker] -= problem.getTime(prev_worker, job); 
+            globalCost -= problem.getCost(prev_worker, job);
         }       
         return prev_worker;
     }
@@ -121,23 +111,13 @@ public class GapSolution {
     // is the solution feasible?
     public boolean isFeasible() {
         for (int i=0; i < workersCount; i++) {
-            if (workerTotalTime[i] > workerLimitTime[i])
+            if (workerTotalTime[i] > problem.getLimitTime(i))
                 return false;
         }
         return true;
     }
 
-    public void setWorkerJobCost(int[][] workerJobCost) {
-        this.workerJobCost = workerJobCost;
-    }
 
-    public void setWorkerJobTime(int[][] workerJobTime) {
-        this.workerJobTime = workerJobTime;
-    }
-
-    public void setWorkerLimitTime(int[] workerLimitTime) {
-        this.workerLimitTime = workerLimitTime;
-    }
 
     public int[] getAssignment() {
         return assignment;
@@ -146,18 +126,7 @@ public class GapSolution {
     public int getJobsCount() {
         return jobsCount;
     }
-
-    public int[][] getWorkerJobCost() {
-        return workerJobCost;
-    }
-
-    public int[][] getWorkerJobTime() {
-        return workerJobTime;
-    }
-
-    public int[] getWorkerLimitTime() {
-        return workerLimitTime;
-    }
+ 
 
     public int[] getWorkerTotalTime() {
         return workerTotalTime;
@@ -170,8 +139,8 @@ public class GapSolution {
     public int overTime(){
         int over = 0;
         for (int i = 0; i < workersCount; i++) {
-            if (workerTotalTime[i] > workerLimitTime[i])
-                over += workerTotalTime[i] - workerLimitTime[i];
+            if (workerTotalTime[i] > problem.getLimitTime(i))
+                over += workerTotalTime[i] - problem.getLimitTime(i);
         }    
         return over;    
     }
@@ -179,8 +148,8 @@ public class GapSolution {
     public int getGlobalCost(){
         return globalCost;
     }
-            
-        public int recountCostAndTime(){
+       
+    public int recountCostAndTime(){
         globalCost = 0;
         for (int i=0; i < workersCount; i++)
             workerTotalTime[i] = 0;
@@ -188,8 +157,8 @@ public class GapSolution {
         for (int i=0; i < jobsCount; i++) {
             int worker = getWorker(i);
             if (isAssigned(i)){
-                globalCost += workerJobCost[worker][i];
-                workerTotalTime[worker] += workerJobTime[worker][i]; 
+                globalCost += problem.getCost(worker, i);
+                workerTotalTime[worker] += problem.getTime(worker, i); 
             }            
         }
         return globalCost;

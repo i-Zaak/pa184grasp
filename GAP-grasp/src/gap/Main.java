@@ -66,7 +66,7 @@ public class Main {
         for (int i = 0; i < 10000; i++){  
             GapSolution newSolution = myProblem.getBestNeighbour();
             if (newSolution.isFeasible()){
-                bestSolution = new GapSolution(newSolution); //best feasible solution this far
+                bestSolution = new GapSolution(newSolution,myProblem); //best feasible solution this far
             }
             if (newSolution.equals(myProblem.getSolution())) {
                 myProblem.perturbate();  // we are stucked

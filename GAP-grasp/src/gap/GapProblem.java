@@ -3,7 +3,6 @@ package gap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Random;
 import java.util.Vector;
 
@@ -18,10 +17,13 @@ public class GapProblem {
     private ArrayList<LinkedList<Integer>> jobDomains = new ArrayList<LinkedList<Integer>>(); 
     int backtracksCount;
     
-    public GapProblem(int _workersCount, int _jobsCount){
+    public GapProblem(int _workersCount, int _jobsCount, int[][] _workerJobCost, int[][] _workerJobTime, int [] _workerLimitTime){
         workersCount = _workersCount;
         jobsCount = _jobsCount;
-        solution = new GapSolution(jobsCount, workersCount);
+        workerJobCost = _workerJobCost.clone();
+        workerJobTime = _workerJobTime.clone();
+        workerLimitTime = _workerLimitTime.clone();
+        solution = new GapSolution(jobsCount, workersCount,this);
         for (int i=0; i < jobsCount; i++) {            
             
             jobDomains.add(new LinkedList<Integer>());
@@ -30,9 +32,6 @@ public class GapProblem {
                 jobDomains.get(i).add(new Integer(j));
             }
         }
-        workerLimitTime = new int[workersCount];
-        workerJobCost = new int[workersCount][jobsCount];
-        workerJobTime = new int[workersCount][jobsCount];
         backtracksCount = 0;
     }
     
@@ -51,21 +50,8 @@ public class GapProblem {
         output += "Total Cost: " + solution.getGlobalCost();
         return output;
     }
-                           
-    public void setWorkerJobCost(int worker, int job, int _cost){
-        workerJobCost[worker][job] = _cost;
-        solution.setWorkerJobCost(workerJobCost);
-    }
-    
-    public void setWorkerJobTime(int worker, int job, int _time){
-        workerJobTime[worker][job] = _time;
-        solution.setWorkerJobTime(workerJobTime);
-    }
-    
-    public void setWorkerLimitTime(int worker, int _limit){
-        workerLimitTime[worker] = _limit;
-        solution.setWorkerLimitTime(workerLimitTime);
-    }
+     
+  
     
     public int getTime(int worker, int job){
         return workerJobTime[worker][job];
@@ -142,7 +128,7 @@ public class GapProblem {
         Collections.sort(sortedJobs);
         System.out.println(sortedJobs);
         for(int i=0; i < jobsCount; i++){
-            Job job = sortedJobs.get(i);            
+            Job job = sortedJobs.get(i);
             if(!solution.assign(job.getId(),job.getBestWorkerId())){
                 boolean assigned = false;
                 for(int j=0; j < workersCount; j++){
@@ -190,9 +176,9 @@ public class GapProblem {
     //change one worker to get neighbour
     public GapSolution getBestNeighbour(){
         int bestCost = solution.getPenalty();
-        GapSolution bestSolution = new GapSolution(solution);
+        GapSolution bestSolution = new GapSolution(solution,this);
         for (int i = 0; i < jobsCount; i++){
-            GapSolution neighSolution = new GapSolution(solution);
+            GapSolution neighSolution = new GapSolution(solution,this);
             int old_worker = neighSolution.getWorker(i);
             for (int j = 0; j < workersCount; j++){
                 if (j != old_worker){
@@ -200,7 +186,7 @@ public class GapProblem {
                     neighSolution.assign(i, j, true);
                     int cost = neighSolution.getPenalty();
                     if (cost < bestCost) {
-                        bestSolution = new GapSolution(neighSolution);
+                        bestSolution = new GapSolution(neighSolution,this);
                         bestCost = cost;
                     }
                 }
@@ -209,4 +195,4 @@ public class GapProblem {
         }  
         return bestSolution;
     }
-}  
+    }
