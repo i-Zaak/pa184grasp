@@ -44,13 +44,16 @@ public class GapParser {
         String tmp[] = line.split(" ");
         int workersCount = Integer.valueOf(tmp[0]);
         int jobCount = Integer.valueOf(tmp[1]);
-        GapProblem myProblem = new GapProblem(workersCount,jobCount);
+        
+        int[][] workerJobCost = new int[workersCount][jobCount];
+        int [][] workerJobTime = new int[workersCount][jobCount];
+        int [] workerLimitTime = new int[workersCount];
         
         for (int i = 0; i < workersCount; i++) { // reading costs
             line = in.readLine();
             tmp = line.split(" ");
             for (int j=0; j < tmp.length; j++){
-                myProblem.setWorkerJobCost(i, j, Integer.parseInt(tmp[j]));
+                workerJobCost[i][j] = Integer.parseInt(tmp[j]);
             }
         }
         
@@ -58,15 +61,17 @@ public class GapParser {
             line = in.readLine();
             tmp = line.split(" ");
             for (int j=0; j < tmp.length; j++){
-                myProblem.setWorkerJobTime(i, j, Integer.parseInt(tmp[j]));
+                workerJobTime[i][j] = Integer.parseInt(tmp[j]);
             }
         }
         
         line = in.readLine();
         tmp = line.split(" ");    
         for (int i=0; i < tmp.length; i++){
-            myProblem.setWorkerLimitTime(i, Integer.parseInt(tmp[i]));
+            workerLimitTime[i] =Integer.parseInt(tmp[i]);
         }
+        
+        GapProblem myProblem = new GapProblem(workersCount, jobCount, workerJobCost, workerJobTime, workerLimitTime);
         
         return myProblem;
     }
