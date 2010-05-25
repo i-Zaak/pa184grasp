@@ -25,12 +25,13 @@ public class GapSolution {
         globalCost = 0;
     }  
     
-    public GapSolution(GapSolution solution, GapProblem problem){
+    public GapSolution(GapSolution solution, GapProblem _problem){
         assignment = solution.getAssignment().clone();
         jobsCount = solution.getJobsCount();
         workersCount = solution.getWorkersCount();
         globalCost = solution.getGlobalCost();
         workerTotalTime = solution.getWorkerTotalTime().clone();
+        problem = _problem;
     }
       
     // are all jobs assigned?
@@ -100,7 +101,7 @@ public class GapSolution {
     public int unassign(int job, boolean update){
         int prev_worker = getWorker(job);
         removeWorker(job);
-        
+  
         if (update){
             workerTotalTime[prev_worker] -= problem.getTime(prev_worker, job); 
             globalCost -= problem.getCost(prev_worker, job);
