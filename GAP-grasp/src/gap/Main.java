@@ -52,7 +52,7 @@ public class Main {
        runtime = new Date().getTime() - runtime;
        if (solved){
             System.out.println(myProblem.toString()); 
-            System.out.println("Random solution found in " + runtime + " ms with " + myProblem.getBacktracksCount() + " backtracks"); 
+            System.out.println("Greedy solution found in " + runtime + " ms with " + myProblem.getBacktracksCount() + " backtracks"); 
         }else{System.out.println(myProblem.toString()); 
              System.out.println("No solution:(");  
         }
