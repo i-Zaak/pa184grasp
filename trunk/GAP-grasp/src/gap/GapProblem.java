@@ -107,23 +107,23 @@ public class GapProblem {
        
     public boolean generateGreedySolution(){
         Vector<Job> sortedJobs = new Vector<Job>(jobsCount);
-        int minCost, maxCost, bestWorker, cost;
+        int minTime, maxTime, bestWorker, time;
         for(int job=0; job < jobsCount; job++){
-            minCost = -1;
-            maxCost = -1;
+            minTime = -1;
+            maxTime = -1;
             bestWorker = -1;
             
             for(int worker=0; worker < workersCount; worker++){
-                cost = getCost(worker,job);
-                if(maxCost < cost){
-                    maxCost = cost;
+                time = getTime(worker,job);
+                if(maxTime < time){
+                    maxTime = time;                    
+                }
+                if(time < minTime || minTime == -1){
+                    minTime = time;
                     bestWorker = worker;
                 }
-                if(cost < minCost && minCost != -1){
-                    minCost = cost;
-                }
             }
-            sortedJobs.add(job, new Job(job, maxCost - minCost, bestWorker));
+            sortedJobs.add(job, new Job(job, maxTime - minTime, bestWorker));
         }
         Collections.sort(sortedJobs);
         System.out.println(sortedJobs);

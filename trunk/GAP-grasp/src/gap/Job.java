@@ -6,13 +6,13 @@ package gap;
  */
 public class Job implements Comparable {
     private int id;
-    private int deltaMinMaxCost;
+    private int deltaMinMaxTime;
     private int bestWorkerId;
     
     
-    public Job( int id, int deltaMinMaxCost, int bestWorkerId){
+    public Job( int id, int deltaMinMaxTime, int bestWorkerId){
         this.id = id;
-        this.deltaMinMaxCost = deltaMinMaxCost;
+        this.deltaMinMaxTime = deltaMinMaxTime;
         this.bestWorkerId = bestWorkerId;
     }
     
@@ -20,8 +20,8 @@ public class Job implements Comparable {
         return id;        
     }
     
-    public int getDeltaMinMaxCost(){
-        return deltaMinMaxCost;
+    public int getDeltaMinMaxTime(){
+        return deltaMinMaxTime;
     }
     
     public int getBestWorkerId(){
@@ -29,10 +29,10 @@ public class Job implements Comparable {
     }
     
     public int compareTo(Object otherJob) {
-        int otherDelta = ((Job) otherJob).getDeltaMinMaxCost();
-        if(deltaMinMaxCost < otherDelta){
+        int otherDelta = ((Job) otherJob).getDeltaMinMaxTime();
+        if(deltaMinMaxTime < otherDelta){
             return -1;
-        }else if(deltaMinMaxCost == otherDelta){
+        }else if(deltaMinMaxTime == otherDelta){
             return 0;
         }else{
             return 1;
