@@ -37,21 +37,10 @@ public class GapProblem {
     
     @Override // lame, but it will do for now
     public String toString(){
-        String output = "Solution:\n";
-        for (int i=0; i < workersCount; i++) {
-            output += "worker " + i + ": items: ";
-            for (int j=0; j < jobsCount; j++) {
-                if (solution.getWorker(j) == i) {
-                    output +=  j + ", ";
-                }                   
-            }
-            output += " total time used: " + solution.getWorkerTime(i) + "/" + workerLimitTime[i] + "\n";
-        }
-        output += "Total Cost: " + solution.getGlobalCost();
-        return output;
+        return solution.toString();        
     }
      
-  
+    
     
     public int getTime(int worker, int job){
         return workerJobTime[worker][job];
