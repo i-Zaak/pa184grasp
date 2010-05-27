@@ -1,5 +1,9 @@
 package gap;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Random;
+
 /**
  *
  * @author Salla
@@ -184,5 +188,75 @@ public class GapSolution {
                return false;
         }
             return true;
+    }
+    
+    @Override // lame, but it will do for now
+    public String toString(){
+        String output = "Solution:\n";
+        for (int i=0; i < workersCount; i++) {
+            output += "worker " + i + ": items: ";
+            for (int j=0; j < jobsCount; j++) {
+                if (getWorker(j) == i) {
+                    output +=  j + ", ";
+                }                   
+            }
+            output += " total time used: " + getWorkerTime(i) + "/" + problem.getLimitTime(i)+ "\n";
+        }
+        output += "Total Cost: " + getGlobalCost();
+        return output;
+    }
+    
+    public String toSVG(){
+        int width = 1300;
+        int height = workersCount*110;
+        
+        String result = "<?xml version=\"1.0\"?>";
+        result += "\n<svg width=\"" + width + "\" height=\"" + (height + 300) + "\">";
+        result += "\n<desc>GAP solution</desc>";
+        result += "\n<g transform=\"translate(50,50)\">";
+        
+        // axes
+        result += "\n<!-- Now Draw the main X and Y axis -->";
+        result += "\n<g style=\"stroke-width:5; stroke:black\">";
+        result += "\n<!-- X Axis -->";        
+        result += "\n<path d=\"M 0 "+ (height +50)+ " L 1000 " + (height + 50) +" Z\"/>";
+        result += "\n<!-- Y Axis -->";
+        result += "\n<path d=\"M 0 0 L 0 "+(height + 50)+" Z\"/>";
+        result += "\n</g>";
+        
+        int maxTime = workerTotalTime[0];
+        for (int i=1; i<workersCount; i++) {
+            if (workerTotalTime[i] > maxTime) {
+                maxTime = workerTotalTime[i];            
+            }
+        }
+        
+        int maxLimit = problem.getLimitTime(0);
+        for (int i=1; i<workersCount; i++) {
+            if (problem.getLimitTime(i) > maxLimit) {
+                maxLimit = problem.getLimitTime(i);            
+            }
+        }
+        
+        int lengthCoeff = (maxLimit < maxTime)? maxTime:maxLimit;
+        lengthCoeff = 1000/lengthCoeff;
+        
+        for(int i=0; i< workersCount; i++){
+            int x = 3;
+            int y = i*110 + 50;
+            int length = getWorkerTime(i)* lengthCoeff;            
+            result += "\n<rect x=\""+x+"\" y=\""+y+"\" width =\""+ length +"\" height=\""+100+"\" style=\"fill:rgb(74,129,247);\" /> ";
+            
+            
+            int limit = problem.getLimitTime(i)*lengthCoeff;
+            if(getWorkerTime(i) < problem.getLimitTime(i)){                
+                result += "\n<rect x=\""+(x+length)+"\" y=\""+y+"\" width =\""+ (limit-length) +"\" height=\""+100+"\" style=\"fill:rgb(141,233,355);\" /> ";
+            }else if(getWorkerTime(i) != problem.getLimitTime(i)) {                
+                result += "\n<rect x=\""+limit+"\" y=\""+y+"\" width =\""+ length +"\" height=\""+100+"\" style=\"fill:rgb(191,0,1);\" /> ";
+            }
+        }
+        result += "\n</g>";
+     	result += "\n</svg>";
+        return result;
     }
 }

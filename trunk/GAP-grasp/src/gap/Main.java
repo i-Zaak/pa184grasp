@@ -5,9 +5,13 @@
 
 package gap;
 
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class Main {
@@ -51,9 +55,17 @@ public class Main {
        boolean solved = myProblem.generateGreedySolution();
        runtime = new Date().getTime() - runtime;
        if (solved){
-            System.out.println(myProblem.toString()); 
-            System.out.println("Greedy solution found in " + runtime + " ms with " + myProblem.getBacktracksCount() + " backtracks"); 
-        }else{System.out.println(myProblem.toString()); 
+            System.out.println(myProblem.toString());             
+            System.out.println("Greedy solution found in " + runtime + " ms with " + myProblem.getBacktracksCount() + " backtracks");             
+            try {
+                FileWriter fstream = new FileWriter("solution.svg");
+                BufferedWriter out = new BufferedWriter(fstream);                
+                out.write(myProblem.getSolution().toSVG());
+                out.close();
+            } catch (IOException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }            
+       }else{System.out.println(myProblem.toString());         
              System.out.println("No solution:(");  
         }
     }
