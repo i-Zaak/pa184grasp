@@ -1,22 +1,33 @@
 <?xml version="1.0"?>
-<svg width="1300" height="850">
+<svg width="1300" height="1400">
 <desc>GAP solution</desc>
 <g transform="translate(50,50)">
 <!-- Now Draw the main X and Y axis -->
 <g style="stroke-width:5; stroke:black">
 <!-- X Axis -->
-<path d="M 0 600 L 1000 600 Z"/>
+<path d="M 0 1150 L 1000 1150 Z"/>
 <!-- Y Axis -->
-<path d="M 0 0 L 0 600 Z"/>
+<path d="M 0 0 L 0 1150 Z"/>
 </g>
-<rect x="3" y="50" width ="950" height="100" style="fill:rgb(74,129,247);" /> 
-<rect x="953" y="50" width ="25" height="100" style="fill:rgb(141,233,355);" /> 
-<rect x="3" y="160" width ="700" height="100" style="fill:rgb(74,129,247);" /> 
-<rect x="703" y="160" width ="200" height="100" style="fill:rgb(141,233,355);" /> 
-<rect x="3" y="270" width ="750" height="100" style="fill:rgb(74,129,247);" /> 
-<rect x="753" y="270" width ="175" height="100" style="fill:rgb(141,233,355);" /> 
-<rect x="3" y="380" width ="650" height="100" style="fill:rgb(74,129,247);" /> 
-<rect x="653" y="380" width ="300" height="100" style="fill:rgb(141,233,355);" /> 
-<rect x="3" y="490" width ="925" height="100" style="fill:rgb(74,129,247);" /> 
+<rect x="3" y="50" width ="384" height="100" style="fill:rgb(74,129,247);" /> 
+<rect x="387" y="50" width ="516" height="100" style="fill:rgb(141,233,355);" /> 
+<rect x="3" y="160" width ="732" height="100" style="fill:rgb(74,129,247);" /> 
+<rect x="735" y="160" width ="84" height="100" style="fill:rgb(141,233,355);" /> 
+<rect x="3" y="270" width ="744" height="100" style="fill:rgb(74,129,247);" /> 
+<rect x="747" y="270" width ="60" height="100" style="fill:rgb(141,233,355);" /> 
+<rect x="3" y="380" width ="588" height="100" style="fill:rgb(74,129,247);" /> 
+<rect x="591" y="380" width ="252" height="100" style="fill:rgb(141,233,355);" /> 
+<rect x="3" y="490" width ="264" height="100" style="fill:rgb(74,129,247);" /> 
+<rect x="267" y="490" width ="576" height="100" style="fill:rgb(141,233,355);" /> 
+<rect x="3" y="600" width ="204" height="100" style="fill:rgb(74,129,247);" /> 
+<rect x="207" y="600" width ="660" height="100" style="fill:rgb(141,233,355);" /> 
+<rect x="3" y="710" width ="360" height="100" style="fill:rgb(74,129,247);" /> 
+<rect x="363" y="710" width ="516" height="100" style="fill:rgb(141,233,355);" /> 
+<rect x="3" y="820" width ="264" height="100" style="fill:rgb(74,129,247);" /> 
+<rect x="267" y="820" width ="660" height="100" style="fill:rgb(141,233,355);" /> 
+<rect x="3" y="930" width ="624" height="100" style="fill:rgb(74,129,247);" /> 
+<rect x="627" y="930" width ="144" height="100" style="fill:rgb(141,233,355);" /> 
+<rect x="3" y="1040" width ="504" height="100" style="fill:rgb(74,129,247);" /> 
+<rect x="507" y="1040" width ="360" height="100" style="fill:rgb(141,233,355);" /> 
 </g>
 </svg>
