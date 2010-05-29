@@ -16,8 +16,8 @@ public class GapParser {
 
     File file;
     
-    public GapParser(String _file){
-        file = new File("./data/"+_file);
+    public GapParser(File _file){
+        file = _file;
     }
     
     public GapProblem parseProblem(int pos) throws FileNotFoundException, IOException{

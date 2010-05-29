@@ -6,6 +6,7 @@
 package gap;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,15 +24,101 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        GapParser parser= new GapParser("gap12.txt"); //files in ./data/ dir
-        System.out.println("Reading information...");
-        myProblem = parser.parseProblem(5); // 5th example in file
+        
+        
+        int position = 1;
+        String file_name = "";
+        boolean random_alg = false;
+        boolean greedy_alg = false;
+        boolean peckish_alg = false;
+        boolean local_search = false;
+        boolean GRASP = false;
+        
+        
+        // the loop to determine users mind :)
+        // USAGE: java -jar GAP-grasp.jar -f gap1.txt -n 1 --greedy --local
+        // get problem 1 from file in ./data/gap1.txt, show greedy solution and do the local search
+      
+        for (int i = 0; i < args.length; i++){ 
+            if (args[i].equals("-f") || args[i].equals("--file")){ // -f file_name.txt
+                file_name = args[i+1];
+                i++;
+                System.out.println("Taking file " + file_name);
+                continue;
+            }
+           
+            if (args[i].equals("-n") || args[i].equals("--number")){ // position in file
+                position = Integer.parseInt(args[i+1]);
+                i++;   
+                System.out.println("Taking problem " + position);
+                continue;
+            }
+            if (args[i].equals("-g") || args[i].equals("--greedy")){ // display greedy solution
+                greedy_alg = true;
+                System.out.println("Greedy solution required");
+                continue;
+            }
+            if (args[i].equals("-r") || args[i].equals("--random")){ // display random solution
+                random_alg = true;
+                System.out.println("Random solution required");
+                continue;
+            }
+            if (args[i].equals("-p") || args[i].equals("--peckish")){ // display peckish solution
+                peckish_alg = true;
+                System.out.println("Peckish solution required");
+                continue;
+            }
+            if (args[i].equals("-l") || args[i].equals("--local")){ // do the local search
+                local_search = true;
+                System.out.println("Local search required");
+                continue;
+            }
+            if (args[i].equals("-G") || args[i].equals("--GRASP")){ // do the GRASP search
+                GRASP = true;
+                System.out.println("GRASP required");
+                continue;
+            }
+            
+        }
+        
+        if (file_name.equals("")){
+            System.out.println("File not specified. Ending.");
+            return;
+        }
+        
+        File file = new File("./data/"+ file_name);
+        if(!file.exists()){
+            System.out.println("File " + file + " not exists");
+            return;
+        }
+        
+        GapParser parser= new GapParser(file); //files in ./data/ dir
+        System.out.println("Reading information for problem " + position);
+        myProblem = parser.parseProblem(position); 
         System.out.println("Done");
  
-        generateRandomSolution();
-        generateGreedySolution();
+        if (random_alg){
+            System.out.println("Generationg random solution");
+            generateRandomSolution();
+        }
         
-      //  localSearch();
+        if (greedy_alg){
+            System.out.println("Generationg greedy solution");
+            generateGreedySolution();
+        }
+        
+        if (peckish_alg){
+            System.out.println("Maybe generationg peckish solution in the future");
+        }
+        
+        if (local_search){
+            System.out.println("Performing local search");
+            localSearch();
+        }
+      
+        if (GRASP){
+            System.out.println("Hopefuly performing GRASP search in the future");
+        }
   
     }
     
