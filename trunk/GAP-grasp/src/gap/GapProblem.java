@@ -55,6 +55,7 @@ public class GapProblem {
     }
        
     public boolean generateRandomSolution(){
+        arcConsistency(-1); 
         Random generator = new Random();
         
         for (int i = 0; i < jobsCount; i++){
@@ -154,12 +155,38 @@ public class GapProblem {
         return solution.isFeasible();           
     }
     
+        //change workers posession
+    public boolean perturbate2(){
+        
+        for (int i = 0; i < jobsCount -1; i++){
+            int prev_worker = solution.unassign(i);
+            solution.assign(i, (prev_worker+1) % workersCount, true);            
+        }
+        return solution.isFeasible();           
+    }
+    
+    
+    
     public GapSolution getSolution(){
         return solution;
     }
     
     public void setSolution(GapSolution _solution){
         solution = _solution;
+    }
+    
+    public int getCostLowerBound(){
+        int minimal_global_cost = 0;
+        for (int i = 0; i < jobsCount; i++) {
+            int min = Integer.MAX_VALUE;
+            for (int j = 0; j < workersCount; j++){
+                if (min > workerJobCost[j][i]){
+                    min = workerJobCost[j][i];
+                }
+            }
+            minimal_global_cost += min;
+        }      
+        return minimal_global_cost;
     }
     
     //change one worker to get neighbour
@@ -184,4 +211,75 @@ public class GapProblem {
         }  
         return bestSolution;
     }
+    
+    // My take on greedy algrithm with backtracing
+        public boolean generateGreediestSolution(){
+        arcConsistency(-1); 
+        double[] min_cost = new double[jobsCount];
+        int[] jobs = new int[jobsCount];
+        
+        for (int i = 0; i < jobsCount; i++){
+            jobs[i] = i;
+            int min = Integer.MAX_VALUE;
+            for (int j = 0; j < workersCount; j++){
+                if (min > workerJobCost[j][i]){
+                    min = workerJobCost[j][i];
+                    min_cost[i] = min;                  
+                }
+            }    
+        }
+
+        for (int i = 0; i < jobsCount - 1; i++){
+            for (int j = i + 1; j < jobsCount; j++){
+                 if (min_cost[i] > min_cost[j]){
+                    double tmp = min_cost[i];
+                    min_cost[i] = min_cost[j];
+                    min_cost[j] = tmp;
+                    tmp = jobs[i];
+                    jobs[i] = jobs[j];
+                    jobs[j] = (int) tmp;
+                }
+            }
+        }
+        
+           for (int i = 0; i < jobsCount; i++){
+            int job = jobs[i];
+            if(!jobDomains.get(job).isEmpty()){
+               int min = Integer.MAX_VALUE; 
+               int best_pos = -1;
+               for (int j = 0; j < jobDomains.get(job).size(); j++){
+                   int worker = jobDomains.get(job).get(j).intValue();
+                   if (min > workerJobCost[worker][job]){
+                        min = workerJobCost[worker][job];
+                        best_pos = j; 
+                    }
+               } 
+               int worker = jobDomains.get(job).get(best_pos).intValue();
+                solution.assign(job,worker,true);
+                jobDomains.get(job).remove(best_pos);
+                arcConsistency(-1); // arc consistency on all not assigned variables
+            } else{
+                i = i - 1; // unassign previous
+                if (i < 0){
+                    return false; // no solution
+                }
+                backtracksCount++;
+                solution.unassign(jobs[i]);
+                arcConsistency(jobs[i]);   
+                i = i - 1; // just step back in for cycle to get to the unassign variable       
+            }
+       }
+       return true; 
+    } 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     }
