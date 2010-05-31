@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.Vector;
+import java.util.Comparator;
 
 public class GapProblem {
     
@@ -34,6 +35,18 @@ public class GapProblem {
         }
         backtracksCount = 0;
     }
+
+    // Comparator for Job class, compares by minTime in descending order
+    public static Comparator<Job> JOB_MINTIME_ORDER_DESC = new Comparator<Job>() {
+        public int compare(Job j1, Job j2) {
+            int minTime1 = j1.getMinTime();
+            int minTime2 = j2.getMinTime();
+            if (minTime1 < minTime2) return -1;
+            else if (minTime2 < minTime1) return 1;
+            else return 0;
+        }
+    };
+
     
     @Override // lame, but it will do for now
     public String toString(){
@@ -135,6 +148,51 @@ public class GapProblem {
             }
         }
         
+        return true;
+    }
+    
+    public boolean generatePeckishSolution() {
+        return generatePeckishSolution(0.2);
+    }
+    
+    /* The function generates feasible peckish solution of the problem. Given
+     * ratio of jobs (those considered the hardest) is assigned to the best
+     * possible worker (if the assignemnt is feasible), the others are assigned
+     * randomly. */
+    public boolean generatePeckishSolution(double ratio) {
+        int greedyJobs = (int) (ratio * jobsCount);
+        Vector<Job> sortedJobs = new Vector<Job>(jobsCount);
+        int minTime, bestWorker, time;
+        minTime = bestWorker = -1;
+        
+        // Determine the shortest time needed for completion of each job.
+        for (int job = 0; job < jobsCount; job++) {
+            
+            for (int worker = 0; worker < workersCount; worker++) {
+                time = getTime(worker, job);
+                if (time < minTime || minTime == -1) {
+                    minTime = time;
+                    bestWorker = worker;
+                }
+            }
+            sortedJobs.add(job, new Job(job, bestWorker));
+            sortedJobs.get(job).setMinTime(minTime);
+        }
+        // Sort jobs by the minimum time they take to any worker in a descending
+        // order.
+        Collections.sort(sortedJobs, JOB_MINTIME_ORDER_DESC);
+        // Output for a visual check.
+        System.out.println(sortedJobs);
+        
+        for (int i = 0; i < greedyJobs; i++) {
+            Job job = sortedJobs.get(i);
+            // Assign job to the worker. Don't check if it was actually assigned,
+            // we won't consider that at all.
+            solution.assign(job.getId(), job.getBestWorkerId());
+        }
+        
+        //TODO: random assignment of the rest, fallback to random if everything
+        //fails
         return true;
     }
 
