@@ -141,12 +141,15 @@ public class GapSolution {
         return workersCount;
     }
 
-    public int overTime(){
-        int over = 0;
+    public double overTime(){
+        double over = 0;
+        int global_time = 0;
         for (int i = 0; i < workersCount; i++) {
-            if (workerTotalTime[i] > problem.getLimitTime(i))
+             if (workerTotalTime[i] > problem.getLimitTime(i))
                 over += workerTotalTime[i] - problem.getLimitTime(i);
+             global_time += problem.getLimitTime(i);
         }    
+        over = over/global_time;
         return over;    
     }
             
@@ -178,8 +181,8 @@ public class GapSolution {
       globalCost = 0;    
     }
     
-    public int getPenalty(){
-        return globalCost + overTime();        
+    public double getPenalty(){
+       return globalCost*(1 + overTime());
     }
 
     public boolean equals(GapSolution solution){

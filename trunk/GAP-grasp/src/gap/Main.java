@@ -119,7 +119,7 @@ public class Main {
         if (GRASP){
             System.out.println("Hopefuly performing GRASP search in the future");
         }
-  
+        
     }
     
     public static void generateRandomSolution(){
@@ -164,7 +164,7 @@ public class Main {
         GapSolution bestSolution = myProblem.getSolution();
         int bestCost = bestSolution.getGlobalCost();
         int min_cost = myProblem.getCostLowerBound();
-        System.out.println("Uplne minimum je " + min_cost);
+        System.out.println("Lower bound of GlobalCost is " + min_cost);
         int idle_iter = 0;
         while(idle_iter < 1000) { //until we did 1000 perturbations
             GapSolution newSolution = myProblem.getBestNeighbour();

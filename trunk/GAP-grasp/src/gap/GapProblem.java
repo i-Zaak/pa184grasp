@@ -249,7 +249,7 @@ public class GapProblem {
     
     //change one worker to get neighbour
     public GapSolution getBestNeighbour(){
-        int bestCost = solution.getPenalty();
+        double bestCost = solution.getPenalty();
         GapSolution bestSolution = new GapSolution(solution,this);
         for (int i = 0; i < jobsCount; i++){
             GapSolution neighSolution = new GapSolution(solution,this);
@@ -258,7 +258,7 @@ public class GapProblem {
                 if (j != old_worker){
                     neighSolution.unassign(i);
                     neighSolution.assign(i, j, true);
-                    int cost = neighSolution.getPenalty();
+                    double cost = neighSolution.getPenalty();
                     if (cost < bestCost) {
                         bestSolution = new GapSolution(neighSolution,this);
                         bestCost = cost;
