@@ -10,15 +10,15 @@ import java.util.Random;
  */
 public class GapSolution {
 
-    private GapProblem problem;
     private int[] assignment; // jobs to workers
     private int jobsCount;
     private int workersCount;
     private int globalCost;
     private int[] workerTotalTime;
+    private GapSettings settings;
     
-    public GapSolution(int _jobsCount, int _workersCount, GapProblem _problem){
-        problem = _problem;
+    public GapSolution(int _jobsCount, int _workersCount, GapSettings _settings){
+        settings = _settings;
         jobsCount = _jobsCount;
         assignment = new int[jobsCount];
         for (int i=0; i < jobsCount; i++) {            
@@ -29,13 +29,13 @@ public class GapSolution {
         globalCost = 0;
     }  
     
-    public GapSolution(GapSolution solution, GapProblem _problem){
+    public GapSolution(GapSolution solution, GapSettings _settings){
         assignment = solution.getAssignment().clone();
         jobsCount = solution.getJobsCount();
         workersCount = solution.getWorkersCount();
         globalCost = solution.getGlobalCost();
         workerTotalTime = solution.getWorkerTotalTime().clone();
-        problem = _problem;
+        settings = _settings;
     }
       
     // are all jobs assigned?
@@ -86,12 +86,12 @@ public class GapSolution {
         if (isAssigned(job)) // already assigned
             return false;
         
-        if (!infeasibility && (getWorkerTime(worker) + problem.getTime(worker, job) ) > problem.getLimitTime(worker)) 
+        if (!infeasibility && (getWorkerTime(worker) + settings.getTime(worker, job) ) > settings.getLimitTime(worker)) 
             return false; // we don't want infeasible solutions
         
         assignment[job] = worker;
-        workerTotalTime[worker] += problem.getTime(worker, job);
-        globalCost += problem.getCost(worker, job);
+        workerTotalTime[worker] += settings.getTime(worker, job);
+        globalCost += settings.getCost(worker, job);
 
         return true;
     }
@@ -107,8 +107,8 @@ public class GapSolution {
         removeWorker(job);
   
         if (update){
-            workerTotalTime[prev_worker] -= problem.getTime(prev_worker, job); 
-            globalCost -= problem.getCost(prev_worker, job);
+            workerTotalTime[prev_worker] -= settings.getTime(prev_worker, job); 
+            globalCost -= settings.getCost(prev_worker, job);
         }       
         return prev_worker;
     }
@@ -116,7 +116,7 @@ public class GapSolution {
     // is the solution feasible?
     public boolean isFeasible() {
         for (int i=0; i < workersCount; i++) {
-            if (workerTotalTime[i] > problem.getLimitTime(i))
+            if (workerTotalTime[i] > settings.getLimitTime(i))
                 return false;
         }
         return true;
@@ -145,9 +145,9 @@ public class GapSolution {
         double over = 0;
         int global_time = 0;
         for (int i = 0; i < workersCount; i++) {
-             if (workerTotalTime[i] > problem.getLimitTime(i))
-                over += workerTotalTime[i] - problem.getLimitTime(i);
-             global_time += problem.getLimitTime(i);
+             if (workerTotalTime[i] > settings.getLimitTime(i))
+                over += workerTotalTime[i] - settings.getLimitTime(i);
+             global_time += settings.getLimitTime(i);
         }    
         over = over/global_time;
         return over;    
@@ -165,8 +165,8 @@ public class GapSolution {
         for (int i=0; i < jobsCount; i++) {
             int worker = getWorker(i);
             if (isAssigned(i)){
-                globalCost += problem.getCost(worker, i);
-                workerTotalTime[worker] += problem.getTime(worker, i); 
+                globalCost += settings.getCost(worker, i);
+                workerTotalTime[worker] += settings.getTime(worker, i); 
             }            
         }
         return globalCost;
@@ -203,7 +203,7 @@ public class GapSolution {
                     output +=  j + ", ";
                 }                   
             }
-            output += " total time used: " + getWorkerTime(i) + "/" + problem.getLimitTime(i)+ "\n";
+            output += " total time used: " + getWorkerTime(i) + "/" + settings.getLimitTime(i)+ "\n";
         }
         output += "Total Cost: " + getGlobalCost();
         return output;
@@ -234,10 +234,10 @@ public class GapSolution {
             }
         }
         
-        int maxLimit = problem.getLimitTime(0);
+        int maxLimit = settings.getLimitTime(0);
         for (int i=1; i<workersCount; i++) {
-            if (problem.getLimitTime(i) > maxLimit) {
-                maxLimit = problem.getLimitTime(i);            
+            if (settings.getLimitTime(i) > maxLimit) {
+                maxLimit = settings.getLimitTime(i);            
             }
         }
         
@@ -251,15 +251,19 @@ public class GapSolution {
             result += "\n<rect x=\""+x+"\" y=\""+y+"\" width =\""+ length +"\" height=\""+100+"\" style=\"fill:rgb(74,129,247);\" /> ";
             
             
-            int limit = problem.getLimitTime(i)*lengthCoeff;
-            if(getWorkerTime(i) < problem.getLimitTime(i)){                
+            int limit = settings.getLimitTime(i)*lengthCoeff;
+            if(getWorkerTime(i) < settings.getLimitTime(i)){                
                 result += "\n<rect x=\""+(x+length)+"\" y=\""+y+"\" width =\""+ (limit-length) +"\" height=\""+100+"\" style=\"fill:rgb(141,233,355);\" /> ";
-            }else if(getWorkerTime(i) != problem.getLimitTime(i)) {                
+            }else if(getWorkerTime(i) != settings.getLimitTime(i)) {                
                 result += "\n<rect x=\""+limit+"\" y=\""+y+"\" width =\""+ length +"\" height=\""+100+"\" style=\"fill:rgb(191,0,1);\" /> ";
             }
         }
         result += "\n</g>";
      	result += "\n</svg>";
         return result;
+    }
+    
+    public GapSettings getSettings(){
+        return settings;
     }
 }
