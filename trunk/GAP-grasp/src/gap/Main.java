@@ -97,6 +97,12 @@ public class Main {
         myProblem = parser.parseProblem(position); 
         System.out.println("Done");
  
+        if (myProblem == null) {
+            System.out.println("Problem " + position + " from " + file_name + " cannot be found");
+            return;
+        }
+            
+        
         if (random_alg){
             System.out.println("Generationg random solution");
             generateRandomSolution();
@@ -159,9 +165,11 @@ public class Main {
     }
     // with infeasible solution -> hard to get a feasible one :(
     public static void localSearch(){
+        long runtime = new Date().getTime();
         myProblem.clear(); 
         generateGreedySolution(); //initial solution
         GapSolution bestSolution = myProblem.getSolution();
+        GapSettings settings = bestSolution.getSettings();
         int bestCost = bestSolution.getGlobalCost();
         int min_cost = myProblem.getCostLowerBound();
         System.out.println("Lower bound of GlobalCost is " + min_cost);
@@ -169,7 +177,7 @@ public class Main {
         while(idle_iter < 1000) { //until we did 1000 perturbations
             GapSolution newSolution = myProblem.getBestNeighbour();
             if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost){
-                bestSolution = new GapSolution(newSolution,myProblem); //best feasible solution this far
+                bestSolution = new GapSolution(newSolution,settings); //best feasible solution this far
                 bestCost = bestSolution.getGlobalCost();
                if (bestCost == min_cost) // when we have found the best cost
                     break;
@@ -188,8 +196,9 @@ public class Main {
             }            
         } 
         myProblem.setSolution(bestSolution);
+        runtime = new Date().getTime() - runtime;
         System.out.println(myProblem.toString()); 
-         
+        System.out.println("Solution found with local search in " + runtime + " ms"); 
         }    
            
     }

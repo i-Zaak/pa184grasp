@@ -70,8 +70,8 @@ public class GapParser {
         for (int i=0; i < tmp.length; i++){
             workerLimitTime[i] =Integer.parseInt(tmp[i]);
         }
-        
-        GapProblem myProblem = new GapProblem(workersCount, jobCount, workerJobCost, workerJobTime, workerLimitTime);
+        GapSettings settings = new GapSettings(workerJobCost, workerJobTime, workerLimitTime);
+        GapProblem myProblem = new GapProblem(workersCount, jobCount, settings);
         
         return myProblem;
     }

@@ -12,21 +12,14 @@ public class GapProblem {
     private int workersCount;
     private int jobsCount;  
     private GapSolution solution;
-    private int[] workerLimitTime;
-    private int[][] workerJobCost;
-    private int[][] workerJobTime;
     private ArrayList<LinkedList<Integer>> jobDomains = new ArrayList<LinkedList<Integer>>(); 
     int backtracksCount;
     
-    public GapProblem(int _workersCount, int _jobsCount, int[][] _workerJobCost, int[][] _workerJobTime, int [] _workerLimitTime){
+    public GapProblem(int _workersCount, int _jobsCount, GapSettings _settings){
         workersCount = _workersCount;
         jobsCount = _jobsCount;
-        workerJobCost = _workerJobCost.clone();
-        workerJobTime = _workerJobTime.clone();
-        workerLimitTime = _workerLimitTime.clone();
-        solution = new GapSolution(jobsCount, workersCount,this);
-        for (int i=0; i < jobsCount; i++) {            
-            
+        solution = new GapSolution(jobsCount, workersCount, _settings);
+        for (int i=0; i < jobsCount; i++) {                       
             jobDomains.add(new LinkedList<Integer>());
             for (int j=0; j < workersCount; j++) {
                 // domains
@@ -52,21 +45,7 @@ public class GapProblem {
     public String toString(){
         return solution.toString();        
     }
-     
-    
-    
-    public int getTime(int worker, int job){
-        return workerJobTime[worker][job];
-    }
-    
-    public int getCost(int worker, int job){
-        return workerJobCost[worker][job];
-    }
-    
-    public int getLimitTime(int worker){
-        return workerLimitTime[worker];
-    }
-       
+ 
     public boolean generateRandomSolution(){
         arcConsistency(-1); 
         Random generator = new Random();
@@ -93,12 +72,13 @@ public class GapProblem {
     }  
     //the main idea is to clear infeasible values from not assigned variables except of the ommited one = node we are backtracking to
     private void arcConsistency(int ommit){
+        GapSettings set = solution.getSettings();
         for (int i=0; i < jobsCount; i++) {
             if (solution.isAssigned(i) || i == ommit)
                 continue;
             jobDomains.get(i).clear();
             for (int j=0; j < workersCount; j++) {
-               if (workerLimitTime[j] >= (solution.getWorkerTime(j) + workerJobTime[j][i]))
+               if (set.getLimitTime(j) >= (solution.getWorkerTime(j) + set.getCost(j,i)))
                     jobDomains.get(i).add(new Integer(j));  // this value can be used!         
             }
         }        
@@ -109,6 +89,7 @@ public class GapProblem {
     }
        
     public boolean generateGreedySolution(){
+        GapSettings set = solution.getSettings();
         Vector<Job> sortedJobs = new Vector<Job>(jobsCount);
         int minTime, maxTime, bestWorker, time;
         for(int job=0; job < jobsCount; job++){
@@ -117,7 +98,7 @@ public class GapProblem {
             bestWorker = -1;
             
             for(int worker=0; worker < workersCount; worker++){
-                time = getTime(worker,job);
+                time = set.getTime(worker,job);
                 if(maxTime < time){
                     maxTime = time;                    
                 }
@@ -160,6 +141,7 @@ public class GapProblem {
      * possible worker (if the assignemnt is feasible), the others are assigned
      * randomly. */
     public boolean generatePeckishSolution(double ratio) {
+        GapSettings set = solution.getSettings();
         int greedyJobs = (int) (ratio * jobsCount);
         Vector<Job> sortedJobs = new Vector<Job>(jobsCount);
         int minTime, bestWorker, time;
@@ -169,7 +151,7 @@ public class GapProblem {
         for (int job = 0; job < jobsCount; job++) {
             
             for (int worker = 0; worker < workersCount; worker++) {
-                time = getTime(worker, job);
+                time = set.getTime(worker, job);
                 if (time < minTime || minTime == -1) {
                     minTime = time;
                     bestWorker = worker;
@@ -234,12 +216,13 @@ public class GapProblem {
     }
     
     public int getCostLowerBound(){
+        GapSettings set = solution.getSettings();
         int minimal_global_cost = 0;
         for (int i = 0; i < jobsCount; i++) {
             int min = Integer.MAX_VALUE;
             for (int j = 0; j < workersCount; j++){
-                if (min > workerJobCost[j][i]){
-                    min = workerJobCost[j][i];
+                if (min > set.getCost(j, i)){
+                    min = set.getCost(j, i);
                 }
             }
             minimal_global_cost += min;
@@ -250,9 +233,9 @@ public class GapProblem {
     //change one worker to get neighbour
     public GapSolution getBestNeighbour(){
         double bestCost = solution.getPenalty();
-        GapSolution bestSolution = new GapSolution(solution,this);
+        GapSolution bestSolution = new GapSolution(solution,solution.getSettings());
         for (int i = 0; i < jobsCount; i++){
-            GapSolution neighSolution = new GapSolution(solution,this);
+            GapSolution neighSolution = new GapSolution(solution,solution.getSettings());
             int old_worker = neighSolution.getWorker(i);
             for (int j = 0; j < workersCount; j++){
                 if (j != old_worker){
@@ -260,7 +243,7 @@ public class GapProblem {
                     neighSolution.assign(i, j, true);
                     double cost = neighSolution.getPenalty();
                     if (cost < bestCost) {
-                        bestSolution = new GapSolution(neighSolution,this);
+                        bestSolution = new GapSolution(neighSolution,solution.getSettings());
                         bestCost = cost;
                     }
                 }
@@ -272,6 +255,7 @@ public class GapProblem {
     
     // My take on greedy algrithm with backtracing
         public boolean generateGreediestSolution(){
+        GapSettings set = solution.getSettings();
         arcConsistency(-1); 
         double[] min_cost = new double[jobsCount];
         int[] jobs = new int[jobsCount];
@@ -280,8 +264,8 @@ public class GapProblem {
             jobs[i] = i;
             int min = Integer.MAX_VALUE;
             for (int j = 0; j < workersCount; j++){
-                if (min > workerJobCost[j][i]){
-                    min = workerJobCost[j][i];
+                if (min > set.getCost(j, i)){
+                    min = set.getCost(j, i);
                     min_cost[i] = min;                  
                 }
             }    
@@ -307,8 +291,8 @@ public class GapProblem {
                int best_pos = -1;
                for (int j = 0; j < jobDomains.get(job).size(); j++){
                    int worker = jobDomains.get(job).get(j).intValue();
-                   if (min > workerJobCost[worker][job]){
-                        min = workerJobCost[worker][job];
+                   if (min > set.getCost(worker,job)){
+                        min = set.getCost(worker,job);
                         best_pos = j; 
                     }
                } 
@@ -326,18 +310,7 @@ public class GapProblem {
                 arcConsistency(jobs[i]);   
                 i = i - 1; // just step back in for cycle to get to the unassign variable       
             }
-       }
-       return true; 
+        }
+        return true; 
     } 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    }
+}
