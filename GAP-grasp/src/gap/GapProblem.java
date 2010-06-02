@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.Random;
 import java.util.Vector;
 import java.util.Comparator;
+import java.util.Date;
 
 public class GapProblem {
 
@@ -19,9 +20,6 @@ public class GapProblem {
         workersCount = _workersCount;
         jobsCount = _jobsCount;
         solution = new GapSolution(jobsCount, workersCount, _settings);
-        for (int i = 0; i < jobsCount; i++) {
-            jobDomains.add(new LinkedList<Integer>());
-        }
         fillJobDomains();
         backtracksCount = 0;
     }
@@ -43,8 +41,9 @@ public class GapProblem {
     };
 
     private void fillJobDomains() {
+        jobDomains.clear();
         for (int i = 0; i < jobsCount; i++) {
-            jobDomains.clear();
+            jobDomains.add(new LinkedList<Integer>());
             for (int j = 0; j < workersCount; j++) {
                 jobDomains.get(i).add(new Integer(j));
             }
@@ -86,16 +85,20 @@ public class GapProblem {
         return true;
     }
     //the main idea is to clear infeasible values from not assigned variables except of the ommited one = node we are backtracking to
-
     private void arcConsistency(int ommit) {
-        GapSettings set = solution.getSettings();
+        arcConsistency(solution, ommit);
+    }
+    
+    
+    private void arcConsistency(GapSolution gs, int ommit) {
+        GapSettings set = gs.getSettings();
         for (int i = 0; i < jobsCount; i++) {
-            if (solution.isAssigned(i) || i == ommit) {
+            if (gs.isAssigned(i) || i == ommit) {
                 continue;
             }
             jobDomains.get(i).clear();
             for (int j = 0; j < workersCount; j++) {
-                if (set.getLimitTime(j) >= (solution.getWorkerTime(j) + set.getCost(j, i))) {
+                if (set.getLimitTime(j) >= (gs.getWorkerTime(j) + set.getCost(j, i))) {
                     jobDomains.get(i).add(new Integer(j));  // this value can be used!         
 
                 }
@@ -152,9 +155,100 @@ public class GapProblem {
     }
 
     public boolean generatePeckishSolution() {
-        return generatePeckishSolution(0.2);
+        return generatePeckishSolution(0.1);
     }
 
+    public boolean generateGRASPSolution() {
+        return generateGRASPSolution(10000, .2);
+    }
+    
+    public boolean generateGRASPSolution(int iterations, double rclRatio) {
+        Vector<Vector<Worker>> sortedWorkers = sortWorkers();
+        GapSolution bestSolution = new GapSolution(jobsCount, workersCount, solution.getSettings());
+        for (int i = 0; i < iterations; i++) {
+            GapSolution gs = generateInitialSolutionForGrasp(sortedWorkers, rclRatio);
+            if (!gs.allAssigned()) {
+                System.out.println("No initial solution found.");
+                return false;
+            } else {
+                System.out.println("Initial solution found.");
+            }
+            gs = localSearch(gs);
+            if (gs.getGlobalCost() < bestSolution.getGlobalCost())
+                bestSolution = gs;
+        }
+        solution = bestSolution;
+        return true;
+    }
+    
+    private Vector<Vector<Worker>> sortWorkers() {
+        GapSettings set = solution.getSettings();
+        Vector<Vector<Worker>> w = new Vector<Vector<Worker>>(jobsCount);
+        for (int i = 0; i < jobsCount; i++) {
+            Vector<Worker> tempWorkers = new Vector<Worker>(workersCount);
+            for (int j = 0; j < workersCount; j++) {
+                tempWorkers.add(new Worker(j, set.getCost(j,i)));
+            }
+            if (!tempWorkers.isEmpty()) Collections.sort(tempWorkers);
+            w.add(tempWorkers);
+        }
+        return w;
+    }
+    
+    public GapSolution generateInitialSolutionForGrasp(Vector<Vector<Worker>> sortedWorkers, double rclRatio) {
+        GapSolution gs = new GapSolution(jobsCount, workersCount, solution.getSettings());
+        Vector<Integer> jobsOrder = new Vector<Integer>(jobsCount);
+        for (int i = 0; i < jobsCount; i++) {
+            jobsOrder.add(i, i);
+        }
+        Random generator = new Random();
+        for (int i = 0; i < jobsCount; i++) {
+            int pos = generator.nextInt(jobsCount - i) + i;
+            int tmp = jobsOrder.get(pos);
+            jobsOrder.set(pos, jobsOrder.get(i));
+            jobsOrder.set(i, tmp);
+        }
+        fillJobDomains();
+        arcConsistency(gs, -1);
+        for (int i = 0; i < jobsCount; i++) {
+            int jobId = jobsOrder.get(i);
+            Vector<Integer> rcl = makeRcl(gs, jobId, sortedWorkers.get(jobId), rclRatio);
+            if (rcl.size() != 0) {
+                int pos = generator.nextInt(rcl.size());
+                gs.assign(jobId, rcl.get(pos));
+                int index = jobDomains.get(jobId).indexOf(rcl.get(pos));
+                jobDomains.get(jobId).remove(index);
+                arcConsistency(gs, -1);
+            } else {
+                i--;
+                gs.unassign(jobId);
+                if (i < 0) return gs;
+                arcConsistency(gs, jobId);
+                backtracksCount++;
+                i--;
+            }
+        }
+        return gs;
+    }
+    
+    private Vector<Integer> makeRcl(GapSolution gs, int jobId, Vector<Worker> workers, double ratio)  {
+        int tmpRclCard = 0;
+        for (int i = 0; i < workers.size(); i++) {
+            if (gs.canFeasiblyAssign(jobId, workers.get(i).getWorkerId())) tmpRclCard++;
+        }
+        int rclCard = (int) (tmpRclCard * ratio);
+        if (rclCard == 0 && tmpRclCard > 0) rclCard = 1;
+        int rclSize = 0;
+        Vector<Integer> rcl = new Vector<Integer>();
+        for (int i = 0; i < workers.size() && rclSize < rclCard; i++) {
+            if (gs.canFeasiblyAssign(jobId, workers.get(i).getWorkerId())) {
+                rcl.add(workers.get(i).getWorkerId());
+                rclSize++;
+            }
+        }
+        return rcl;
+    }
+    
     /* The function generates feasible peckish solution of the problem. Given
      * ratio of jobs (those considered the hardest) is assigned to the best
      * possible worker (if the assignemnt is feasible), the others are assigned
@@ -165,7 +259,7 @@ public class GapProblem {
             ratio = 0.0;
         }
         if (ratio > 1.0) {
-            ratio = 0.2;
+            ratio = 0.1;
         }
         int greedyJobs = (int) (ratio * jobsCount);
         // Selected ratio too low, fall back to random
@@ -404,4 +498,42 @@ public class GapProblem {
         }
         return true;
     }
+    
+        // with infeasible solution -> hard to get a feasible one :(
+    public GapSolution localSearch(GapSolution gs) {
+        GapSolution bestSolution = gs;
+        GapSettings settings = bestSolution.getSettings();
+        int bestCost = bestSolution.getGlobalCost();
+        int min_cost = getCostLowerBound();
+        int idle_iter = 0;
+        while (idle_iter < 1000) { //until we did 1000 perturbations
+
+            GapSolution newSolution = getBestNeighbour();
+            if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
+                bestSolution = new GapSolution(newSolution, settings); //best feasible solution this far
+
+                bestCost = bestSolution.getGlobalCost();
+                if (bestCost == min_cost) // when we have found the best cost
+                {
+                    break;
+                }
+            }
+            if (newSolution.equals(getSolution())) {
+                Random generator = new Random(idle_iter); // we can choose between two perturbations
+
+                int random = generator.nextInt(100);
+                if (random < 50) {
+                    perturbate();  // we are stuck
+
+                } else {
+                    perturbate2();
+                }
+                idle_iter++;
+            } else {
+                setSolution(newSolution);
+            }
+        }
+        return bestSolution;
+    }
+
 }
