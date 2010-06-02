@@ -67,7 +67,7 @@ public class GapProblem {
                 solution.assign(i, worker, true);
                 jobDomains.get(i).remove(pos);
                 arcConsistency(-1); // arc consistency on all not assigned variables
-
+                
             } else {
                 i = i - 1; // unassign previous
 
@@ -97,8 +97,8 @@ public class GapProblem {
                 continue;
             }
             jobDomains.get(i).clear();
-            for (int j = 0; j < workersCount; j++) {
-                if (set.getLimitTime(j) >= (gs.getWorkerTime(j) + set.getCost(j, i))) {
+            for (int j = 0; j < workersCount; j++) {               
+                if (set.getLimitTime(j) >= (gs.getWorkerTime(j) + set.getTime(j, i))) {
                     jobDomains.get(i).add(new Integer(j));  // this value can be used!         
 
                 }
