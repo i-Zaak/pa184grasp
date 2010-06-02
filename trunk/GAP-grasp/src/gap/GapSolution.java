@@ -86,13 +86,18 @@ public class GapSolution {
         if (isAssigned(job)) // already assigned
             return false;
         
-        if (!infeasibility && (getWorkerTime(worker) + settings.getTime(worker, job) ) > settings.getLimitTime(worker)) 
+        if (!infeasibility && canFeasiblyAssign(job, worker)) 
             return false; // we don't want infeasible solutions
         
         assignment[job] = worker;
         workerTotalTime[worker] += settings.getTime(worker, job);
         globalCost += settings.getCost(worker, job);
 
+        return true;
+    }
+    
+    public boolean canFeasiblyAssign(int job, int worker) {
+        if ((getWorkerTime(worker) + settings.getTime(worker, job) ) > settings.getLimitTime(worker)) return false;
         return true;
     }
     
