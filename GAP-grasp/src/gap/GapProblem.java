@@ -158,25 +158,30 @@ public class GapProblem {
     }
 
     public boolean generateGRASPSolution() {
-        return generateGRASPSolution(10000, .2);
+        return generateGRASPSolution(1000, .2);
     }
     
     public boolean generateGRASPSolution(int iterations, double rclRatio) {
         Vector<Vector<Worker>> sortedWorkers = sortWorkers();
         GapSolution bestSolution = new GapSolution(jobsCount, workersCount, solution.getSettings());
+        int bestCost = Integer.MAX_VALUE;
         for (int i = 0; i < iterations; i++) {
+            System.out.println("grasp_iter: " + i);
             GapSolution gs = generateInitialSolutionForGrasp(sortedWorkers, rclRatio);
             if (!gs.allAssigned()) {
                 System.out.println("No initial solution found.");
                 return false;
             } else {
-                System.out.println("Initial solution found.");
+                System.out.println("Initial solution found. Cost: " + gs.getGlobalCost());
             }
-            gs = localSearch(gs);
-            if (gs.getGlobalCost() < bestSolution.getGlobalCost())
-                bestSolution = gs;
+            gs = new GapSolution(localSearch(gs), gs.getSettings());
+            if (gs.getGlobalCost() < bestCost) {
+                bestSolution = new GapSolution(gs, gs.getSettings());
+                bestCost = gs.getGlobalCost();
+            }
+            System.out.println("Best so far: " + bestSolution.getGlobalCost());
         }
-        solution = bestSolution;
+        solution = new GapSolution(bestSolution, bestSolution.getSettings());
         return true;
     }
     
@@ -429,8 +434,12 @@ public class GapProblem {
         return getBestNeighbour(solution);
     }
 
-    //change one worker to get neighbour
     public GapSolution getBestNeighbour(GapSolution gs) {
+        return getBestNeighbour(gs, false);
+    }
+
+    //change one worker to get neighbour
+    public GapSolution getBestNeighbour(GapSolution gs, boolean feasible) {
         double bestCost = gs.getPenalty();
         GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
         for (int i = 0; i < jobsCount; i++) {
@@ -441,7 +450,8 @@ public class GapProblem {
                     neighSolution.unassign(i);
                     neighSolution.assign(i, j, true);
                     double cost = neighSolution.getPenalty();
-                    if (cost < bestCost) {
+                    if ((cost < bestCost) && (!feasible || neighSolution.isFeasible())) {
+                        System.out.println("neighbour found");
                         bestSolution = new GapSolution(neighSolution, gs.getSettings());
                         bestCost = cost;
                     }
@@ -519,14 +529,15 @@ public class GapProblem {
     
         // with infeasible solution -> hard to get a feasible one :(
     public GapSolution localSearch(GapSolution gs) {
-        GapSolution bestSolution = gs;
+        GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
         GapSettings settings = bestSolution.getSettings();
         int bestCost = bestSolution.getGlobalCost();
         int min_cost = getCostLowerBound(bestSolution.getSettings());
         int idle_iter = 0;
         while (idle_iter < 1000) { //until we did 1000 perturbations
-
-            GapSolution newSolution = getBestNeighbour(bestSolution);
+            //System.out.println("iter:" + idle_iter);
+            //System.out.println(bestCost);
+            GapSolution newSolution = getBestNeighbour(bestSolution, true);
             if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
                 bestSolution = new GapSolution(newSolution, settings); //best feasible solution this far
 
@@ -536,19 +547,8 @@ public class GapProblem {
                     break;
                 }
             }
-            if (newSolution.equals(gs)) {
-                Random generator = new Random(idle_iter); // we can choose between two perturbations
-
-                int random = generator.nextInt(100);
-                if (random < 50) {
-                    perturbate(gs);  // we are stuck
-
-                } else {
-                    perturbate2(gs);
-                }
-                idle_iter++;
-            } else {
-                //setSolution(newSolution);
+            if (newSolution.equals(bestSolution)) {
+                return bestSolution;
             }
         }
         return bestSolution;
