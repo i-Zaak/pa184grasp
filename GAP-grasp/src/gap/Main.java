@@ -91,7 +91,7 @@ public class Main {
             return;
         }
 
-        File file = new File("./data/"+file_name);
+        File file = new File(file_name);
         if (!file.exists()) {
             System.out.println("File " + file + " does not exist");
             return;
