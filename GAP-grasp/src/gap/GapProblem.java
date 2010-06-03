@@ -414,12 +414,16 @@ public class GapProblem {
         return minimal_global_cost;
     }
 
-    //change one worker to get neighbour
     public GapSolution getBestNeighbour() {
-        double bestCost = solution.getPenalty();
-        GapSolution bestSolution = new GapSolution(solution, solution.getSettings());
+        return getBestNeighbour(solution);
+    }
+
+    //change one worker to get neighbour
+    public GapSolution getBestNeighbour(GapSolution gs) {
+        double bestCost = gs.getPenalty();
+        GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
         for (int i = 0; i < jobsCount; i++) {
-            GapSolution neighSolution = new GapSolution(solution, solution.getSettings());
+            GapSolution neighSolution = new GapSolution(gs, gs.getSettings());
             int old_worker = neighSolution.getWorker(i);
             for (int j = 0; j < workersCount; j++) {
                 if (j != old_worker) {
@@ -427,7 +431,7 @@ public class GapProblem {
                     neighSolution.assign(i, j, true);
                     double cost = neighSolution.getPenalty();
                     if (cost < bestCost) {
-                        bestSolution = new GapSolution(neighSolution, solution.getSettings());
+                        bestSolution = new GapSolution(neighSolution, gs.getSettings());
                         bestCost = cost;
                     }
                 }
