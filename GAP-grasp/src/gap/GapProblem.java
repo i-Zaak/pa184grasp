@@ -369,26 +369,34 @@ public class GapProblem {
         backtracksCount = 0;
     }
 
-    //shift in solution
     public boolean perturbate() {
-        int first_worker = solution.getWorker(0);
+        return perturbate(solution);
+    }
+
+    //shift in solution
+    public boolean perturbate(GapSolution gs) {
+        int first_worker = gs.getWorker(0);
         for (int i = 0; i < jobsCount - 1; i++) {
-            solution.unassign(i);
-            solution.assign(i, solution.getWorker(i + 1), true);
+            gs.unassign(i);
+            gs.assign(i, gs.getWorker(i + 1), true);
         }
-        solution.unassign(jobsCount - 1);
-        solution.assign(jobsCount - 1, first_worker, true);
-        return solution.isFeasible();
+        gs.unassign(jobsCount - 1);
+        gs.assign(jobsCount - 1, first_worker, true);
+        return gs.isFeasible();
+    }
+
+    public boolean perturbate2() {
+        return perturbate2(solution);
     }
 
     //change workers posession
-    public boolean perturbate2() {
+    public boolean perturbate2(GapSolution gs) {
 
         for (int i = 0; i < jobsCount - 1; i++) {
-            int prev_worker = solution.unassign(i);
-            solution.assign(i, (prev_worker + 1) % workersCount, true);
+            int prev_worker = gs.unassign(i);
+            gs.assign(i, (prev_worker + 1) % workersCount, true);
         }
-        return solution.isFeasible();
+        return gs.isFeasible();
     }
 
     public GapSolution getSolution() {
@@ -518,7 +526,7 @@ public class GapProblem {
         int idle_iter = 0;
         while (idle_iter < 1000) { //until we did 1000 perturbations
 
-            GapSolution newSolution = getBestNeighbour();
+            GapSolution newSolution = getBestNeighbour(bestSolution);
             if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
                 bestSolution = new GapSolution(newSolution, settings); //best feasible solution this far
 
@@ -528,19 +536,19 @@ public class GapProblem {
                     break;
                 }
             }
-            if (newSolution.equals(getSolution())) {
+            if (newSolution.equals(gs)) {
                 Random generator = new Random(idle_iter); // we can choose between two perturbations
 
                 int random = generator.nextInt(100);
                 if (random < 50) {
-                    perturbate();  // we are stuck
+                    perturbate(gs);  // we are stuck
 
                 } else {
-                    perturbate2();
+                    perturbate2(gs);
                 }
                 idle_iter++;
             } else {
-                setSolution(newSolution);
+                //setSolution(newSolution);
             }
         }
         return bestSolution;
