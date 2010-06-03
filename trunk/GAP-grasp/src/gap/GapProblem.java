@@ -403,7 +403,7 @@ public class GapProblem {
     //change workers posession
     public boolean perturbate2(GapSolution gs) {
 
-        for (int i = 0; i < jobsCount - 1; i++) {
+        for (int i = 0; i < jobsCount; i++) {
             int prev_worker = gs.unassign(i);
             gs.assign(i, (prev_worker + 1) % workersCount, true);
         }
@@ -581,7 +581,7 @@ public class GapProblem {
             GapSolution newSolution = getBestNeighbour(bestSolution, true);
             if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
                 bestSolution = new GapSolution(newSolution, settings); //best feasible solution this far
-
+                
                 bestCost = bestSolution.getGlobalCost();
                 if (bestCost == min_cost) // when we have found the best cost
                 {
@@ -593,6 +593,34 @@ public class GapProblem {
             }
         }
         return bestSolution;
+    }
+    
+        public GapSolution localSearchMIRKA(GapSolution gs) {
+        GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
+        GapSettings settings = bestSolution.getSettings();
+        GapSolution bestFeasible = new GapSolution(gs, gs.getSettings());
+        int bestCost = bestSolution.getGlobalCost();
+        int min_cost = getCostLowerBound(bestSolution.getSettings());
+        int idle_iter = 0;
+        while (idle_iter < 1000) { //until we did 1000 perturbations
+            //System.out.println("iter:" + idle_iter);
+            //System.out.println(bestCost);
+            GapSolution newSolution = getBestNeighbour(bestSolution, false);
+            bestSolution = new GapSolution(newSolution, settings); //best solution this far
+            if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
+                bestFeasible = new GapSolution(newSolution, settings);
+                bestCost = bestSolution.getGlobalCost();
+                if (bestCost == min_cost) // when we have found the best cost
+                {
+                    break;
+                }
+            }
+            if (newSolution.equals(bestSolution)) {
+                perturbate(bestSolution);                
+                idle_iter++;
+            }
+        }
+        return bestFeasible;
     }
 
 }
