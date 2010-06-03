@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.Random;
 import java.util.Vector;
 import java.util.Comparator;
-import java.util.Date;
 
 public class GapProblem {
 
@@ -212,17 +211,19 @@ public class GapProblem {
         arcConsistency(gs, -1);
         for (int i = 0; i < jobsCount; i++) {
             int jobId = jobsOrder.get(i);
+            if (i == 0) System.out.println(i);
             Vector<Integer> rcl = makeRcl(gs, jobId, sortedWorkers.get(jobId), rclRatio);
             if (rcl.size() != 0) {
                 int pos = generator.nextInt(rcl.size());
-                gs.assign(jobId, rcl.get(pos));
+                gs.assign(jobId, rcl.get(pos).intValue());
                 int index = jobDomains.get(jobId).indexOf(rcl.get(pos));
                 jobDomains.get(jobId).remove(index);
                 arcConsistency(gs, -1);
             } else {
                 i--;
-                gs.unassign(jobId);
                 if (i < 0) return gs;
+                jobId = jobsOrder.get(i);
+                gs.unassign(jobId);
                 arcConsistency(gs, jobId);
                 backtracksCount++;
                 i--;
@@ -234,14 +235,16 @@ public class GapProblem {
     private Vector<Integer> makeRcl(GapSolution gs, int jobId, Vector<Worker> workers, double ratio)  {
         int tmpRclCard = 0;
         for (int i = 0; i < workers.size(); i++) {
-            if (gs.canFeasiblyAssign(jobId, workers.get(i).getWorkerId())) tmpRclCard++;
+            if (gs.canFeasiblyAssign(jobId, workers.get(i).getWorkerId()) &&
+                jobDomains.get(jobId).contains(workers.get(i).getWorkerId())) tmpRclCard++;
         }
         int rclCard = (int) (tmpRclCard * ratio);
         if (rclCard == 0 && tmpRclCard > 0) rclCard = 1;
         int rclSize = 0;
         Vector<Integer> rcl = new Vector<Integer>();
         for (int i = 0; i < workers.size() && rclSize < rclCard; i++) {
-            if (gs.canFeasiblyAssign(jobId, workers.get(i).getWorkerId())) {
+            if (gs.canFeasiblyAssign(jobId, workers.get(i).getWorkerId()) &&
+                jobDomains.get(jobId).contains(workers.get(i).getWorkerId())) {
                 rcl.add(workers.get(i).getWorkerId());
                 rclSize++;
             }

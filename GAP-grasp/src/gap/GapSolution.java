@@ -86,7 +86,7 @@ public class GapSolution {
         if (isAssigned(job)) // already assigned
             return false;
         
-        if (!infeasibility && !canFeasiblyAssign(job, worker)) 
+        if (!infeasibility && !canFeasiblyAssign(job, worker))
             return false; // we don't want infeasible solutions
         
         assignment[job] = worker;
