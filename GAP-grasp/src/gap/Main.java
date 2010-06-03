@@ -31,7 +31,8 @@ public class Main {
         boolean peckish_alg = false;
         boolean local_search = false;
         boolean GRASP = false;
-
+        boolean paralel = false;
+        int numThreads = 1;
 
         // the loop to determine users mind :)
         // USAGE: java -jar GAP-grasp.jar -f gap1.txt -n 1 --greedy --local
@@ -83,6 +84,23 @@ public class Main {
                 System.out.println("GRASP required");
                 continue;
             }
+            if (args[i].equals("-a") || args[i].equals("--paralel")) { // do the GRASP search
+                if(GRASP){
+                    paralel = true;
+                    System.out.println("Going paralel");
+                }else{
+                    System.out.println("Working sequential, paralel only with --GRASP");
+                }
+                continue;
+            }
+            if (args[i].equals("-t") || args[i].equals("--threads")) { // -t numthreads
+
+                numThreads = Integer.parseInt(args[i + 1]);
+                i++;
+                System.out.println("Number of threads " + numThreads);
+                continue;
+            }
+
 
         }
 
@@ -130,12 +148,31 @@ public class Main {
         }
 
         if (GRASP) {
-            System.out.println("Performing GRASP search");
-            generateGRASPSolution();
+            if(!paralel){
+                System.out.println("Performing sequential GRASP search");
+                generateGRASPSolution();
+            }else{
+                System.out.println("Performing parallel GRASP search");
+                generateParalelGRASPSolution(numThreads);
+            }
+            
         }
 
     }
 
+    public static void generateParalelGRASPSolution(int numThreads) {
+        myProblem.clear();
+        long runtime = new Date().getTime();
+        boolean solved = myProblem.generateParalelGRASPSolution(numThreads);
+        runtime = new Date().getTime() - runtime;
+        if (solved) {
+            System.out.println(myProblem.toString());
+            System.out.println("GRASP solution found in " + runtime + " ms with " + myProblem.getBacktracksCount() + " backtracks");
+        } else {
+            System.out.println(myProblem.toString());
+            System.out.println("No solution:(");
+        }
+    }
     public static void generateGRASPSolution() {
         myProblem.clear();
         long runtime = new Date().getTime();

@@ -6,6 +6,8 @@ import java.util.LinkedList;
 import java.util.Random;
 import java.util.Vector;
 import java.util.Comparator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GapProblem {
 
@@ -38,6 +40,10 @@ public class GapProblem {
             }
         }
     };
+
+    private GapProblem(GapProblem problem) {
+        this(problem.workersCount, problem.jobsCount, problem.getSolution().getSettings());
+    }
 
     private void fillJobDomains() {
         jobDomains.clear();
@@ -527,6 +533,41 @@ public class GapProblem {
         return true;
     }
     
+    // skelet
+    public boolean generateParalelGRASPSolution(int numThreads){
+        Vector<SolverThread> threads = new Vector<SolverThread>(numThreads);
+        for(int i = 0; i < numThreads; i++ ){
+            threads.add(new SolverThread(new GapProblem(this)));
+            threads.get(i).start();
+        }
+        for(int i = 0; i < numThreads; i++ ){
+            try {
+                threads.get(i).join();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GapProblem.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        GapSolution bestSolution = threads.get(0).getSolution();
+
+        boolean foundSolution = false;
+        for(int i = 0; i < numThreads; i++ ){
+            System.out.println("Thread num:" + threads.get(i).getId());
+            if( !threads.get(i).foundSolution() ){
+                System.out.println("Didn't find solution.");                
+            }else{
+                foundSolution = true;
+                System.out.println("Found solution.");
+                System.out.println(threads.get(i).getSolution());
+                if(threads.get(i).getSolution().getGlobalCost() < bestSolution.getGlobalCost()){
+                    bestSolution = threads.get(i).getSolution();
+                }
+            }
+        }
+        solution = bestSolution;
+        return foundSolution;
+    }
+   
         // with infeasible solution -> hard to get a feasible one :(
     public GapSolution localSearch(GapSolution gs) {
         GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
