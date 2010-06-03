@@ -400,7 +400,10 @@ public class GapProblem {
     }
 
     public int getCostLowerBound() {
-        GapSettings set = solution.getSettings();
+        return getCostLowerBound(solution.getSettings());
+    }
+
+    public int getCostLowerBound(GapSettings set) {
         int minimal_global_cost = 0;
         for (int i = 0; i < jobsCount; i++) {
             int min = Integer.MAX_VALUE;
@@ -511,7 +514,7 @@ public class GapProblem {
         GapSolution bestSolution = gs;
         GapSettings settings = bestSolution.getSettings();
         int bestCost = bestSolution.getGlobalCost();
-        int min_cost = getCostLowerBound();
+        int min_cost = getCostLowerBound(bestSolution.getSettings());
         int idle_iter = 0;
         while (idle_iter < 1000) { //until we did 1000 perturbations
 
