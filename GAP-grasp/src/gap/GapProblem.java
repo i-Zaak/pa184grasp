@@ -467,6 +467,29 @@ public class GapProblem {
         }
         return bestSolution;
     }
+        // swap two jobs to get neighbour
+        public GapSolution getBestNeighbour2(GapSolution gs, boolean feasible) {
+        double bestCost = gs.getPenalty();
+        GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
+        for (int i = 0; i < jobsCount; i++) 
+            for (int j = i + 1; j < jobsCount; j++){
+                GapSolution neighSolution = new GapSolution(gs, gs.getSettings());
+                int old_worker1 = gs.getWorker(i);
+                int old_worker2 = gs.getWorker(j);
+                if (old_worker1 == old_worker2)
+                    continue;
+                neighSolution.unassign(i);
+                neighSolution.assign(i,old_worker2, true);
+                neighSolution.unassign(j);
+                neighSolution.assign(j, old_worker1, true);
+                double cost = neighSolution.getPenalty();
+                if ((cost < bestCost) && (!feasible || neighSolution.isFeasible())) {
+                   bestSolution = new GapSolution(neighSolution, gs.getSettings());
+                   bestCost = cost;
+                }
+           }
+        return bestSolution;
+   }
 
     // My take on greedy algrithm with backtracing
     public boolean generateGreediestSolution() {
