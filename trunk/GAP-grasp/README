@@ -1,0 +1,35 @@
+Parallel GAP Solver using GRASP meta-heuristic by Jan Fousek, Miroslava Placha, Pavel Troubil
+
+Usage example: java -jar GAP-grasp.jar -f ./data/gap1.txt -n 1 --greedy --local --output ./
+-- get problem 1 from file in ./data/gap1.txt, show greedy solution and do the local search. Output the result to the current directory.
+
+Command-line arguments:
+  -f or --file file name
+    Specify input file 
+
+  -n of --number position in file
+    Number of the problem in the file
+
+  -g or --greedy: display greedy solution
+    Run greedy solution generator
+
+  -r or --random: display random solution
+    Run random solution generator
+
+  -p or --peckish: display peckish solution
+    Run peckish solution generator
+
+  -l or --local: perform the local search
+    Perform local search starting from quick greedy heuristic solution
+
+  -G or --GRASP: run GRASP
+    Perform GRASP meta-heuristic search
+
+  -a or --parallel: run in parallel
+    Run GRASP in parallel. Needs to be specified after -G.
+
+  -t or --threads number of threads
+    Number of parallelly running threads
+
+  -o or --output directory
+    Directory where the output (.svg and .html file) will be generated. If the directory does not exist, it will be created automatically.
