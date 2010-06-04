@@ -31,7 +31,9 @@ public class Main {
         boolean local_search = false;
         boolean GRASP = false;
         boolean paralel = false;
+        boolean generateOutput = false;
         int numThreads = 1;
+        String outputPrefix ="";
 
         // USAGE: java -jar GAP-grasp.jar -f ./data/gap1.txt -n 1 --greedy --local
         // get problem 1 from file in ./data/gap1.txt, show greedy solution and do the local search
@@ -101,6 +103,14 @@ public class Main {
                 System.out.println("Number of threads " + numThreads);
                 continue;
             }
+            if (args[i].equals("-o") || args[i].equals("--output")) { // -o outputPrefix
+                generateOutput = true;
+                outputPrefix = args[i + 1];
+                i++;
+                System.out.println("Creating report in " + outputPrefix);
+                continue;
+            }
+
         }
 
         if (file_name.equals("")) {
@@ -154,8 +164,12 @@ public class Main {
                 System.out.println("Performing parallel GRASP search");
                 generateParalelGRASPSolution(numThreads);
             }
-            
         }
+        if(generateOutput){
+            generateReport();
+        }
+
+
 
     }
 
@@ -236,6 +250,10 @@ public class Main {
             System.out.println(myProblem.toString());
             System.out.println("No solution:(");
         }
+    }
+
+    public static void generateReport(){
+        System.out.println("Output generation is work in progress");
     }
     
         public static void generateTimeGreedySolution() {
