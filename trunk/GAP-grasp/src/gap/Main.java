@@ -10,7 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -277,16 +276,7 @@ public class Main {
                 }
             }
             if (newSolution.equals(myProblem.getSolution())) {
-                Random generator = new Random(idle_iter); // we can choose between two perturbations
-
-                int random = generator.nextInt(100);
-                if (random < 50) {
-                    myProblem.perturbate();  // we are stucked
-
-                } else {
-                    myProblem.perturbate2();
-                }
-                idle_iter++;
+                    myProblem.getSolution().perturb();  // we are stucked
             } else {
                 myProblem.setSolution(newSolution);
             }
