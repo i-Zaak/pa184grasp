@@ -629,7 +629,7 @@ public class GapProblem {
         return minimal_global_cost;
     }
 
-    // greedy algrithm with backtracing hungry for costs
+    // greedy algrithm with backtracing hungry for costs (with respect to time)
     public boolean generateGreedySolution() {
         GapSettings set = solution.getSettings();
         arcConsistency(-1);
@@ -640,8 +640,8 @@ public class GapProblem {
             jobs[i] = i;
             int min = Integer.MAX_VALUE;
             for (int j = 0; j < workersCount; j++) {
-                if (min > set.getCost(j, i)) {
-                    min = set.getCost(j, i);
+                if (min > set.getCost(j, i) * set.getTime(j, i)) {
+                    min = set.getCost(j, i) * set.getTime(j, i);
                     min_cost[i] = min;
                 }
             }
@@ -667,8 +667,8 @@ public class GapProblem {
                 int best_pos = -1;
                 for (int j = 0; j < jobDomains.get(job).size(); j++) {
                     int worker = jobDomains.get(job).get(j).intValue();
-                    if (min > set.getCost(worker, job)) {
-                        min = set.getCost(worker, job);
+                    if (min > set.getCost(worker, job) * set.getTime(worker, job)) {
+                        min = set.getCost(worker, job) * set.getTime(worker, job);
                         best_pos = j;
                     }
                 }
