@@ -35,7 +35,9 @@ public class GapSolution {
         settings = _settings;
     }
       
-    // are all jobs assigned?
+    /**
+     * Returns true if all jobs are assigned, false otherwise.
+     */
     public boolean allAssigned() {
         for (int i=0; i < jobsCount; i++) {
             if (getWorker(i) == -1){
@@ -62,7 +64,11 @@ public class GapSolution {
             return false;
         return true;            
     }
-    
+
+    /**
+     * Return how much of the worker's capacity is utilized.
+     * @param worker Id of the worker.
+     */
     public int getWorkerTime(int worker){
         return workerTotalTime[worker];
     }
@@ -193,6 +199,7 @@ public class GapSolution {
         return globalCost;
     }
 
+    /*
     public int recountCostAndTime(){
         globalCost = 0;
         for (int i=0; i < workersCount; i++)
@@ -206,7 +213,7 @@ public class GapSolution {
             }            
         }
         return globalCost;
-    }
+    }*/
 
     /**
      * Clear the solution, i.e., unassign all workers and reset their times;
@@ -370,27 +377,42 @@ public class GapSolution {
         return settings;
     }
 
+    /**
+     * Find the best feasible neighbour of the solution.
+     * @return The best neighbour found.
+     */
     public GapSolution getBestNeighbour() {
         return getBestNeighbour(false);
     }
 
+    /**
+     * Find the best neighbour of the solution. There are three neighbourhood steps used:
+     * - move a job from one worker to another;
+     * - swap workers assigned to a pair of jobs; and
+     * - swap all jobs between a pair of workers.
+     * @param feasible True requires the neighbour to be feasible.
+     * @return The best neighbour found.
+     */
     public GapSolution getBestNeighbour(boolean feasible) {
         double bestCost = getPenalty();
         double neighCost;
         GapSolution bestSolution = new GapSolution(this, getSettings());
         GapSolution neighSolution = new GapSolution(this, getSettings());
+        /** Step 1: Move job to another worker. */
         neighSolution = getBestJobMoveNeighbour(feasible);
         neighCost = neighSolution.getPenalty();
         if ((neighCost < bestCost) && (!feasible || neighSolution.isFeasible())) {
             bestSolution = new GapSolution(neighSolution, this.getSettings());
             bestCost = neighCost;
         }
+        /** Step 2: Swap assignment of two jobs */
         neighSolution = getBestTwoJobSwapNeighbour(feasible);
         neighCost = neighSolution.getPenalty();
         if ((neighCost < bestCost) && (!feasible || neighSolution.isFeasible())) {
             bestSolution = new GapSolution(neighSolution, getSettings());
             bestCost = neighCost;
         }
+        /** Step 3: Swap all jobs between two workers. */
         neighSolution = getBestAllJobsSwapNeihgbour(feasible);
         neighCost = neighSolution.getPenalty();
         if ((neighCost < bestCost) && (!feasible || neighSolution.isFeasible())) {
@@ -400,7 +422,12 @@ public class GapSolution {
         return bestSolution;
     }
 
-    //change one worker to get neighbour
+    /**
+     * Perform one of the neighbourhood generation steps: try to move all jobs to
+     * another worker.
+     * @param feasible Determines if the neighbour found should be feasible or not.
+     * @return The best neighbour found.
+     */
     public GapSolution getBestJobMoveNeighbour(boolean feasible) {
         double bestCost = getPenalty();
         GapSolution bestSolution = new GapSolution(this, getSettings());
@@ -422,7 +449,13 @@ public class GapSolution {
         }
         return bestSolution;
     }
-        // swap two jobs to get neighbour
+
+     /**
+     * Perform one of the neighbourhood generation steps: try to swap workers assigned
+     * to a pair of jobs.
+     * @param feasible Determines if the neighbour found should be feasible or not.
+     * @return The best neighbour found.
+     */
         public GapSolution getBestTwoJobSwapNeighbour(boolean feasible) {
         double bestCost = getPenalty();
         GapSolution bestSolution = new GapSolution(this, getSettings());
@@ -446,6 +479,12 @@ public class GapSolution {
         return bestSolution;
    }
 
+     /**
+     * Perform one of the neighbourhood generation steps: swap all jobs assigned
+     * between a pair of workers.
+     * @param feasible Determines if the neighbour found should be feasible or not.
+     * @return The best neighbour found.
+     */
     public GapSolution getBestAllJobsSwapNeihgbour(boolean feasible) {
         double bestCost = getPenalty();
         GapSolution bestSolution = new GapSolution(this, getSettings());
@@ -461,7 +500,14 @@ public class GapSolution {
             }
         return bestSolution;
     }
-    
+
+    /**
+     * Perturb a solution for local search algorithm. Randomly chooses one of two
+     * available perturbation methods:
+     * - assign the job to a worker who has assigned the next job (cyclic shift of jobs)
+     * - increase id of assigned worker for each job by one (move to the next worker);
+     * @return True if the perturbed solution is feasible, false otherwise.
+     */
     public boolean perturb() {
         int perturbOptions = 2;
         Random generator = new Random();
@@ -476,7 +522,12 @@ public class GapSolution {
         return isFeasible();
     }
     
-    //shift in solution
+    /**
+     * For each job, take worker assigned to the next job, and assign the given job to him.
+     * Performs cyclic shift of the jobs, i.e., job 1 to worker assigned to original worker of job 2,
+     * job 2 assigned to worker of original job 3, etc.
+     * @return True if the perturbed solution is feasible, false otherwise.
+     */
     public boolean perturbNextJobWorkers() {
         int first_worker = getWorker(0);
         for (int i = 0; i < jobsCount - 1; i++) {
@@ -488,7 +539,11 @@ public class GapSolution {
         return isFeasible();
     }
 
-    //change workers posession
+    /**
+     * Cylic shift of workers: worker 1 takes all jobs of worker 0 and moves his jobs
+     * to worker 2, etc.
+     * @return  True if the perturbed solution is feasible, false otherwise.
+     */
     public boolean perturbNextWorker() {
 
         for (int i = 0; i < jobsCount; i++) {
