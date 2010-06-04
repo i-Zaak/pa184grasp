@@ -261,17 +261,17 @@ public class Main {
         GapSolution bestSolution = myProblem.getSolution();
         GapSettings settings = bestSolution.getSettings();
         int bestCost = bestSolution.getGlobalCost();
-        int min_cost = myProblem.getCostLowerBound();
-        System.out.println("Lower bound of GlobalCost is " + min_cost);
+        int lowerBound = myProblem.getCostLowerBound();
+        System.out.println("Lower bound of GlobalCost is " + lowerBound);
         int idle_iter = 0;
-        while (idle_iter < 1000) { //until we did 1000 perturbations
+        while (idle_iter < 100) {
 
-            GapSolution newSolution = myProblem.getBestNeighbour();
+            GapSolution newSolution = myProblem.getSolution().getBestNeighbour();
             if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
                 bestSolution = new GapSolution(newSolution, settings); //best feasible solution this far
 
                 bestCost = bestSolution.getGlobalCost();
-                if (bestCost == min_cost) // when we have found the best cost
+                if (bestCost == lowerBound) // when we have found the best cost
                 {
                     break;
                 }

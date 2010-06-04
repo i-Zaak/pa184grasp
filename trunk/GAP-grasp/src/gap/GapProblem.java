@@ -629,102 +629,6 @@ public class GapProblem {
         return minimal_global_cost;
     }
 
-    public GapSolution getBestNeighbour() {
-        return getBestNeighbour(solution);
-    }
-
-    public GapSolution getBestNeighbour(GapSolution gs) {
-        return getBestNeighbour(gs, false);
-    }
-    
-    public GapSolution getBestNeighbour(GapSolution gs, boolean feasible) {
-        double bestCost = gs.getPenalty();
-        double neighCost;
-        GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
-        GapSolution neighSolution = new GapSolution(gs, gs.getSettings());
-        neighSolution = getBestJobMoveNeighbour(gs, feasible);
-        neighCost = neighSolution.getPenalty();
-        if ((neighCost < bestCost) && (!feasible || neighSolution.isFeasible())) {
-            bestSolution = new GapSolution(neighSolution, gs.getSettings());
-            bestCost = neighCost;
-        }
-        neighSolution = getBestTwoJobSwapNeighbour(gs, feasible);
-        neighCost = neighSolution.getPenalty();
-        if ((neighCost < bestCost) && (!feasible || neighSolution.isFeasible())) {
-            bestSolution = new GapSolution(neighSolution, gs.getSettings());
-            bestCost = neighCost;
-        }
-        neighSolution = getBestAllJobsSwapNeihgbour(gs, feasible);
-        neighCost = neighSolution.getPenalty();
-        if ((neighCost < bestCost) && (!feasible || neighSolution.isFeasible())) {
-            bestSolution = new GapSolution(neighSolution, gs.getSettings());
-            bestCost = neighCost;
-        }
-        return bestSolution;
-    }
-
-    //change one worker to get neighbour
-    public GapSolution getBestJobMoveNeighbour(GapSolution gs, boolean feasible) {
-        double bestCost = gs.getPenalty();
-        GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
-        for (int i = 0; i < jobsCount; i++) {
-            GapSolution neighSolution = new GapSolution(gs, gs.getSettings());
-            int old_worker = neighSolution.getWorker(i);
-            for (int j = 0; j < workersCount; j++) {
-                if (j != old_worker) {
-                    neighSolution.unassign(i);
-                    neighSolution.assign(i, j, true);
-                    double cost = neighSolution.getPenalty();
-                    if ((cost < bestCost) && (!feasible || neighSolution.isFeasible())) {
-                        bestSolution = new GapSolution(neighSolution, gs.getSettings());
-                        bestCost = cost;
-                    }
-                }
-            }
-
-        }
-        return bestSolution;
-    }
-        // swap two jobs to get neighbour
-        public GapSolution getBestTwoJobSwapNeighbour(GapSolution gs, boolean feasible) {
-        double bestCost = gs.getPenalty();
-        GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
-        for (int i = 0; i < jobsCount; i++) 
-            for (int j = i + 1; j < jobsCount; j++){
-                GapSolution neighSolution = new GapSolution(gs, gs.getSettings());
-                int old_worker1 = gs.getWorker(i);
-                int old_worker2 = gs.getWorker(j);
-                if (old_worker1 == old_worker2)
-                    continue;
-                neighSolution.unassign(i);
-                neighSolution.assign(i,old_worker2, true);
-                neighSolution.unassign(j);
-                neighSolution.assign(j, old_worker1, true);
-                double cost = neighSolution.getPenalty();
-                if ((cost < bestCost) && (!feasible || neighSolution.isFeasible())) {
-                   bestSolution = new GapSolution(neighSolution, gs.getSettings());
-                   bestCost = cost;
-                }
-           }
-        return bestSolution;
-   }
-        
-    public GapSolution getBestAllJobsSwapNeihgbour(GapSolution gs, boolean feasible) {
-        double bestCost = gs.getPenalty();
-        GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
-        for (int i = 0; i < workersCount; i++)
-            for (int j = i + 1; j < workersCount; j++) {
-                GapSolution neighSolution = new GapSolution(gs, gs.getSettings());
-                neighSolution.swapWorkers(i, j);
-                double cost = neighSolution.getPenalty();
-                if ((cost < bestCost) && (!feasible || neighSolution.isFeasible())) {
-                    bestSolution = new GapSolution(neighSolution, gs.getSettings());
-                    bestCost = cost;
-                }
-            }
-        return bestSolution;
-    }
-
     // greedy algrithm with backtracing hungry for costs
     public boolean generateGreedySolution() {
         GapSettings set = solution.getSettings();
@@ -833,7 +737,7 @@ public class GapProblem {
         int lowerBound = getCostLowerBound(bestSolution.getSettings());
         int idle_iter = 0;
         while (idle_iter < 100) {
-            GapSolution newSolution = getBestNeighbour(bestSolution, false);
+            GapSolution newSolution = bestSolution.getBestNeighbour(false);
 
             if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
                 bestFeasible = new GapSolution(newSolution, settings);

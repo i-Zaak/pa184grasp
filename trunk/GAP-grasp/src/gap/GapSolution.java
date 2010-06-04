@@ -369,6 +369,98 @@ public class GapSolution {
     public GapSettings getSettings(){
         return settings;
     }
+
+    public GapSolution getBestNeighbour() {
+        return getBestNeighbour(false);
+    }
+
+    public GapSolution getBestNeighbour(boolean feasible) {
+        double bestCost = getPenalty();
+        double neighCost;
+        GapSolution bestSolution = new GapSolution(this, getSettings());
+        GapSolution neighSolution = new GapSolution(this, getSettings());
+        neighSolution = getBestJobMoveNeighbour(feasible);
+        neighCost = neighSolution.getPenalty();
+        if ((neighCost < bestCost) && (!feasible || neighSolution.isFeasible())) {
+            bestSolution = new GapSolution(neighSolution, this.getSettings());
+            bestCost = neighCost;
+        }
+        neighSolution = getBestTwoJobSwapNeighbour(feasible);
+        neighCost = neighSolution.getPenalty();
+        if ((neighCost < bestCost) && (!feasible || neighSolution.isFeasible())) {
+            bestSolution = new GapSolution(neighSolution, getSettings());
+            bestCost = neighCost;
+        }
+        neighSolution = getBestAllJobsSwapNeihgbour(feasible);
+        neighCost = neighSolution.getPenalty();
+        if ((neighCost < bestCost) && (!feasible || neighSolution.isFeasible())) {
+            bestSolution = new GapSolution(neighSolution, getSettings());
+            bestCost = neighCost;
+        }
+        return bestSolution;
+    }
+
+    //change one worker to get neighbour
+    public GapSolution getBestJobMoveNeighbour(boolean feasible) {
+        double bestCost = getPenalty();
+        GapSolution bestSolution = new GapSolution(this, getSettings());
+        for (int i = 0; i < jobsCount; i++) {
+            GapSolution neighSolution = new GapSolution(this, getSettings());
+            int old_worker = neighSolution.getWorker(i);
+            for (int j = 0; j < workersCount; j++) {
+                if (j != old_worker) {
+                    neighSolution.unassign(i);
+                    neighSolution.assign(i, j, true);
+                    double cost = neighSolution.getPenalty();
+                    if ((cost < bestCost) && (!feasible || neighSolution.isFeasible())) {
+                        bestSolution = new GapSolution(neighSolution, getSettings());
+                        bestCost = cost;
+                    }
+                }
+            }
+
+        }
+        return bestSolution;
+    }
+        // swap two jobs to get neighbour
+        public GapSolution getBestTwoJobSwapNeighbour(boolean feasible) {
+        double bestCost = getPenalty();
+        GapSolution bestSolution = new GapSolution(this, getSettings());
+        for (int i = 0; i < jobsCount; i++)
+            for (int j = i + 1; j < jobsCount; j++){
+                GapSolution neighSolution = new GapSolution(this, getSettings());
+                int old_worker1 = getWorker(i);
+                int old_worker2 = getWorker(j);
+                if (old_worker1 == old_worker2)
+                    continue;
+                neighSolution.unassign(i);
+                neighSolution.assign(i,old_worker2, true);
+                neighSolution.unassign(j);
+                neighSolution.assign(j, old_worker1, true);
+                double cost = neighSolution.getPenalty();
+                if ((cost < bestCost) && (!feasible || neighSolution.isFeasible())) {
+                   bestSolution = new GapSolution(neighSolution, getSettings());
+                   bestCost = cost;
+                }
+           }
+        return bestSolution;
+   }
+
+    public GapSolution getBestAllJobsSwapNeihgbour(boolean feasible) {
+        double bestCost = getPenalty();
+        GapSolution bestSolution = new GapSolution(this, getSettings());
+        for (int i = 0; i < workersCount; i++)
+            for (int j = i + 1; j < workersCount; j++) {
+                GapSolution neighSolution = new GapSolution(this, getSettings());
+                neighSolution.swapWorkers(i, j);
+                double cost = neighSolution.getPenalty();
+                if ((cost < bestCost) && (!feasible || neighSolution.isFeasible())) {
+                    bestSolution = new GapSolution(neighSolution, getSettings());
+                    bestCost = cost;
+                }
+            }
+        return bestSolution;
+    }
     
     public boolean perturb() {
         int perturbOptions = 2;
