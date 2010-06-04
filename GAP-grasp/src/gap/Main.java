@@ -34,7 +34,7 @@ public class Main {
         boolean paralel = false;
         int numThreads = 1;
 
-        // USAGE: java -jar GAP-grasp.jar -f gap1.txt -n 1 --greedy --local
+        // USAGE: java -jar GAP-grasp.jar -f ./data/gap1.txt -n 1 --greedy --local
         // get problem 1 from file in ./data/gap1.txt, show greedy solution and do the local search
 
         /**
@@ -238,12 +238,25 @@ public class Main {
             System.out.println("No solution:(");
         }
     }
-    // with infeasible solution -> hard to get a feasible one :(
+    
+        public static void generateTimeGreedySolution() {
+
+        myProblem.clear();
+        long runtime = new Date().getTime();
+        boolean solved = myProblem.generateTimeGreedySolution();
+        runtime = new Date().getTime() - runtime;
+        if (solved) {
+            System.out.println(myProblem.toString());
+            System.out.println("Time greedy solution found in " + runtime + " ms with " + myProblem.getBacktracksCount() + " backtracks");
+              System.out.println(myProblem.toString());
+            System.out.println("No solution:(");
+        }
+    }    
 
     public static void localSearch() {
         long runtime = new Date().getTime();
         myProblem.clear();
-        generateGreedySolution(); //initial solution
+        generateTimeGreedySolution(); //initial solution
 
         GapSolution bestSolution = myProblem.getSolution();
         GapSettings settings = bestSolution.getSettings();
