@@ -831,24 +831,21 @@ System.out.println(jobsOrder);
         GapSettings settings = bestSolution.getSettings();
         GapSolution bestFeasible = new GapSolution(gs, gs.getSettings());
         int bestCost = bestSolution.getGlobalCost();
-        int min_cost = getCostLowerBound(bestSolution.getSettings());
+        int lowerBound = getCostLowerBound(bestSolution.getSettings());
         int idle_iter = 0;
         while (idle_iter < 100) {
             GapSolution newSolution = getBestNeighbour(bestSolution, false);
-            bestSolution = new GapSolution(newSolution, settings); //best solution this far
 
             if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
                 bestFeasible = new GapSolution(newSolution, settings);
-                bestCost = bestSolution.getGlobalCost();
-                if (bestCost == min_cost) // when we have found the best cost
-                {
-                    break;
-                }
+                bestCost = bestFeasible.getGlobalCost();
+                if (bestCost == lowerBound) break;
             }
             if (newSolution.equals(bestSolution)) {
                 bestSolution.perturb();
                 idle_iter++;
-            }
+            } 
+            bestSolution = new GapSolution(newSolution, settings); //best solution this far
         }
         return bestFeasible;
     }
