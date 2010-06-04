@@ -14,6 +14,10 @@ public class Worker implements Comparable {
     /** Sorting parameter. */
     int sortParam;
 
+    @Override
+    public String toString(){
+        return workerId + ":" + sortParam;
+    }
     public Worker(int workerId, int sortParam) {
         this.workerId = workerId;
         this.sortParam = sortParam;
