@@ -32,9 +32,9 @@ public class GapProblem {
             int minTime1 = j1.getMinTime();
             int minTime2 = j2.getMinTime();
             if (minTime1 < minTime2) {
-                return -1;
-            } else if (minTime2 < minTime1) {
                 return 1;
+            } else if (minTime2 < minTime1) {
+                return -1;
             } else {
                 return 0;
             }
@@ -275,7 +275,9 @@ public class GapProblem {
         if (ratio > 1.0) {
             ratio = 0.1;
         }
-        int greedyJobs = (int) (ratio * jobsCount);
+        int greedyJobs = Math.max((int) (ratio * jobsCount), 5);
+        greedyJobs = Math.min(greedyJobs, jobsCount);
+        System.out.println("greedy jobs: " + greedyJobs);
         // Selected ratio too low, fall back to random
         if (greedyJobs <= 0) {
             System.out.println("Peckish generator: ratio too low, fallback to radnom generation.");
@@ -320,7 +322,7 @@ public class GapProblem {
         // how many times have we run?
         int level = 0;
         Random generator = new Random();
-        while (level < 3 && greedyJobs > 5) {
+        while (level < 3 && greedyJobs >= 5) {
             // Reset job domains
             fillJobDomains();
             // Remove infeasible values on the basis of previous assignments
@@ -328,7 +330,7 @@ public class GapProblem {
             // Iterate through randomJobs and attempt to assign them randomly
             for (int i = 0; i < randomJobs.size(); i++) {
                 int jobId = randomJobs.get(i).getId();
-                if (!jobDomains.get(i).isEmpty()) {
+                if (!jobDomains.get(jobId).isEmpty()) {
                     int workerPos = generator.nextInt(jobDomains.get(jobId).size());
                     int workderId = jobDomains.get(jobId).get(workerPos).intValue();
                     solution.assign(jobId, workderId);
@@ -341,6 +343,7 @@ public class GapProblem {
                         break; //no solution found
 
                     }
+                    jobId = randomJobs.get(i).getId();
                     solution.unassign(jobId);
                     arcConsistency(jobId);
                     backtracksCount++;
