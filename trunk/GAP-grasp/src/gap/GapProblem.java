@@ -192,22 +192,34 @@ public class GapProblem {
     }
 
     public boolean generateGRASPSolution() {
-        return generateGRASPSolution(50, .3);
+        return generateGRASPSolution(50, .1);
     }
     
     public boolean generateGRASPSolution(int iterations, double rclRatio) {
         Vector<Vector<Worker>> sortedWorkers = sortWorkers();
         GapSolution bestSolution = new GapSolution(jobsCount, workersCount, solution.getSettings());
         int bestCost = Integer.MAX_VALUE;
+        boolean forceBacktrack = false;
+        int maxBacktracks = 500000;
+        double maxFailedIterRatio = 0.5;
+        int failedIterations = 0;
+
         for (int i = 0; i < iterations; i++) {
             System.out.println("grasp_iter: " + i);
-            //GapSolution gs = generateInitialSolutionForGrasp(sortedWorkers, rclRatio);
-            GapSolution gs = generateInitialSolutionForGraspGreediest(rclRatio);
+            GapSolution gs = generateInitialSolutionForGrasp(sortedWorkers, rclRatio, forceBacktrack, maxBacktracks);
             if (!gs.allAssigned()) {
                 System.out.println("No initial solution found.");
-                return false;
+                if(forceBacktrack) return false;
+                failedIterations++;
+                maxBacktracks *=2;
+                if(failedIterations > maxFailedIterRatio * iterations){
+                    forceBacktrack = true;
+                    System.out.println("Too many failed iterations, forcing full backtracking.");
+                }
+                continue;
             } else {
                 System.out.println("Initial solution found. Cost: " + gs.getGlobalCost());
+                System.out.println(gs);
             }
             gs = new GapSolution(localSearch(gs), gs.getSettings());
             System.out.println("After local search: " + gs.getGlobalCost());
@@ -227,15 +239,18 @@ public class GapProblem {
         for (int i = 0; i < jobsCount; i++) {
             Vector<Worker> tempWorkers = new Vector<Worker>(workersCount);
             for (int j = 0; j < workersCount; j++) {
-                tempWorkers.add(new Worker(j, set.getCost(j,i)));
+                //tempWorkers.add(new Worker(j, set.getCost(j,i)));
+                tempWorkers.add(new Worker(j, Integer.MAX_VALUE - set.getTime(j,i)));
+                System.out.println("w" + j + " t" + set.getTime(j,i));
             }
             if (!tempWorkers.isEmpty()) Collections.sort(tempWorkers);
+            System.out.println(tempWorkers);
             w.add(tempWorkers);
         }
         return w;
     }
     
-    public GapSolution generateInitialSolutionForGrasp(Vector<Vector<Worker>> sortedWorkers, double rclRatio) {
+    public GapSolution generateInitialSolutionForGrasp(Vector<Vector<Worker>> sortedWorkers, double rclRatio, boolean forceBacktrack, int maxBacktracks) {
         GapSolution gs = new GapSolution(jobsCount, workersCount, solution.getSettings());
         /*Vector<Integer> jobsOrder = new Vector<Integer>(jobsCount);
         for (int i = 0; i < jobsCount; i++) {
@@ -264,14 +279,15 @@ public class GapProblem {
                     maxTime = time;
                 }
             }
-            jobsOrder.add(job, new Job(job, bestWorker));
-            jobsOrder.get(job).setMinTime(minTime);
-            jobsOrder.get(job).setMaxTime(maxTime);
+            //jobsOrder.add(job, new Job(job, bestWorker));
+            //jobsOrder.get(job).setMinTime(minTime);
+            //jobsOrder.get(job).setMaxTime(maxTime);
+            jobsOrder.add(job, new Job(job, maxTime-minTime, bestWorker));
         }
         // Sort jobs by the minimum time they take to any worker in a descending
         // order.
-        Collections.sort(jobsOrder, JOB_MINTIME_ORDER_DESC);
-
+        Collections.sort(jobsOrder);
+System.out.println(jobsOrder);
         Random generator = new Random();
 
         for (int i = 0; i < jobsCount; i++) {
@@ -283,6 +299,7 @@ public class GapProblem {
   
         fillJobDomains();
         arcConsistency(gs, -1);
+        int backtracks = 0;
         for (int i = 0; i < jobsCount; i++) {
             int jobId = jobsOrder.get(i).getId();
             Vector<Integer> rcl = makeRcl(gs, jobId, sortedWorkers.get(jobId), rclRatio);
@@ -294,15 +311,70 @@ public class GapProblem {
                 jobDomains.get(jobId).remove(index);
                 arcConsistency(gs, -1);
             } else {
+                if(!forceBacktrack && backtracks > maxBacktracks) return gs;
                 i--;
                 if (i < 0) return gs;
                 jobId = jobsOrder.get(i).getId();
                 gs.unassign(jobId);
                 arcConsistency(gs, jobId);
-                backtracksCount++;
+                backtracks++;
                 i--;
             }
         }
+        System.out.println("Needed backtracks:" + backtracks);
+        backtracksCount += backtracks;
+        return gs;
+    }
+
+    public GapSolution generateInitialSolutionForGraspGreedy(double rclRatio){
+        GapSolution gs = new GapSolution(jobsCount, workersCount, solution.getSettings());
+        GapSettings set = gs.getSettings();
+        List<Job> sortedJobs = new LinkedList<Job>();
+
+        int minTime, maxTime, bestWorker, time;
+        for (int job = 0; job < jobsCount; job++) {
+            minTime = -1;
+            maxTime = -1;
+            bestWorker = -1;
+
+            for (int worker = 0; worker < workersCount; worker++) {
+                time = set.getTime(worker, job);
+                if (maxTime < time) {
+                    maxTime = time;
+                }
+                if (time < minTime || minTime == -1) {
+                    minTime = time;
+                    bestWorker = worker;
+                }
+            }
+            sortedJobs.add(job, new Job(job, maxTime - minTime, bestWorker));
+        }
+        Collections.sort(sortedJobs);
+
+        int rclSize = (int)(jobsCount * rclRatio);
+        if(rclSize == 0) rclSize = 1;
+        Random generator = new Random();
+        for (int i = 0; i < jobsCount; i++) {
+            int r = generator.nextInt(Math.min(rclSize,sortedJobs.size()));
+            Job job = sortedJobs.get(r);
+
+            if (!gs.assign(job.getId(), job.getBestWorkerId())) {
+                boolean assigned = false;
+                for (int j = 0; j < workersCount; j++) {
+                    if (gs.assign(job.getId(), j)) {
+                        assigned = true;
+                        break;
+                    }
+                }
+                if (!assigned) {
+                    System.out.println("Failed to assign job " + job.getId());
+                    System.out.println("FIXME: implement backtracking in Greedy solution generation!");
+                    return gs;
+                }
+            }
+            sortedJobs.remove(r);
+        }
+
         return gs;
     }
 
@@ -741,7 +813,7 @@ public class GapProblem {
         return foundSolution;
     }
        
-        public GapSolution localSearch(GapSolution gs) {
+    public GapSolution localSearch(GapSolution gs) {
         GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
         GapSettings settings = bestSolution.getSettings();
         GapSolution bestFeasible = new GapSolution(gs, gs.getSettings());
@@ -749,7 +821,7 @@ public class GapProblem {
         int min_cost = getCostLowerBound(bestSolution.getSettings());
         int idle_iter = 0;
         while (idle_iter < 100) {
-            GapSolution newSolution = getBestNeighbour(bestSolution, false);
+            GapSolution newSolution = getBestNeighbour2(bestSolution, false);
             bestSolution = new GapSolution(newSolution, settings); //best solution this far
             if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
                 bestFeasible = new GapSolution(newSolution, settings);
