@@ -346,7 +346,7 @@ public class GapProblem {
                     }
                 }
                 int worker = jobDomains.get(job).get(best_pos).intValue();
-                gs.assign(job, worker, true);
+                gs.assign(job, worker, false);
                 unassignedJobs.remove(r);
                 jobDomains.get(job).remove(best_pos);
                 arcConsistency(-1); // arc consistency on all not assigned variables
