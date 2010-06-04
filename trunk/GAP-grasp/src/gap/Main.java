@@ -87,7 +87,7 @@ public class Main {
                 System.out.println("GRASP required");
                 continue;
             }
-            if (args[i].equals("-a") || args[i].equals("--paralel")) { // do the GRASP search
+            if (args[i].equals("-a") || args[i].equals("--paralel")) { // do the GRASP search in parallel
                 if(GRASP){
                     paralel = true;
                     System.out.println("Going paralel");
@@ -128,7 +128,7 @@ public class Main {
 
         System.out.println("Reading input for problem " + position);
         myProblem = parser.parseProblem(position);
-        System.out.println("Done");
+        System.out.println("Reading done.");
 
         if (myProblem == null) {
             System.out.println("Problem " + position + " from " + file_name + " cannot be found");
@@ -238,14 +238,6 @@ public class Main {
         if (solved) {
             System.out.println(myProblem.toString());
             System.out.println("Greedy solution found in " + runtime + " ms with " + myProblem.getBacktracksCount() + " backtracks");
-            try {
-                FileWriter fstream = new FileWriter("solution.svg");
-                BufferedWriter out = new BufferedWriter(fstream);
-                out.write(myProblem.getSolution().toSVG());
-                out.close();
-            } catch (IOException ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-            }
         } else {
             System.out.println(myProblem.toString());
             System.out.println("No solution:(");
@@ -330,7 +322,7 @@ public class Main {
         GapSettings settings = bestSolution.getSettings();
         int bestCost = bestSolution.getGlobalCost();
         int lowerBound = myProblem.getCostLowerBound();
-        System.out.println("Lower bound of GlobalCost is " + lowerBound);
+        System.out.println("Local search: Lower bound of GlobalCost is " + lowerBound);
         int idle_iter = 0;
         while (idle_iter < 1000) {
             GapSolution newSolution = bestSolution.getBestNeighbour(false);

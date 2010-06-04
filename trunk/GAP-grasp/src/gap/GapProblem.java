@@ -180,7 +180,6 @@ public class GapProblem {
         /** Reset the job domains.*/
         fillJobDomains();
         updateJobDomains(-1);
-        System.out.println(sortedJobs);
         for (int i = 0; i < jobsCount; i++) {
             Job job = sortedJobs.get(i);
             if (!jobDomains.get(job.getId()).isEmpty()) {
@@ -252,11 +251,9 @@ public class GapProblem {
         int failedIterations = 0;
 
         for (int i = 0; i < iterations; i++) {
-            System.out.println("GRASP iteration number: " + i);
             /** Generate the initial solution. */
             GapSolution gs = generateInitialSolutionForGrasp(sortedWorkers, rclRatio, forceBacktrack, maxBacktracks);
             if (!gs.allAssigned()) { // Solution generator failed to find a feasible solution.
-                System.out.println("No initial solution found.");
                 if (forceBacktrack) {
                     return false;
                 }
@@ -264,22 +261,18 @@ public class GapProblem {
                 maxBacktracks *= 2;
                 if (failedIterations > maxFailedIterRatio * iterations) { //Too many iterations have failed
                     forceBacktrack = true;
-                    System.out.println("Too many failed iterations, forcing full backtracking.");
+                    System.out.println("GRASP: Too many failed iterations, forcing full backtracking.");
                 }
                 continue; // Do not perform local search
             } else {
-                System.out.println("Initial solution found. Cost: " + gs.getGlobalCost());
-                System.out.println(gs);
                 maxBacktracks *= 0.8;
             }
             /** Perform the local search on the generated solution */
             gs = new GapSolution(localSearch(gs), gs.getSettings());
-            System.out.println("Cost after local search: " + gs.getGlobalCost());
             if (gs.getGlobalCost() < bestCost) { // We found the best solution so far
                 bestSolution = new GapSolution(gs, gs.getSettings());
                 bestCost = gs.getGlobalCost();
             }
-            System.out.println("Best cost so far: " + bestSolution.getGlobalCost());
         }
         solution = new GapSolution(bestSolution, bestSolution.getSettings());
         return true;
@@ -378,7 +371,6 @@ public class GapProblem {
                 i--;
             }
         }
-        System.out.println("Needed backtracks:" + backtracks);
         backtracksCount += backtracks;
         return gs;
     }
@@ -432,7 +424,6 @@ public class GapProblem {
         }
         int greedyJobs = Math.max((int) (ratio * jobsCount), 5);
         greedyJobs = Math.min(greedyJobs, jobsCount);
-        System.out.println("greedy jobs: " + greedyJobs);
         // Selected ratio too low, fall back to random
         if (greedyJobs <= 0) {
             System.out.println("Peckish generator: ratio too low, fallback to radnom generation.");
@@ -532,7 +523,6 @@ public class GapProblem {
             return generateRandomSolution();
         }
         //This should never happen:
-        System.out.println("Peckish generator: something went very wrong");
         return true;
     }
 
@@ -663,11 +653,10 @@ public class GapProblem {
         for (int i = 0; i < numThreads; i++) {
             System.out.println("Thread num:" + threads.get(i).getId());
             if (!threads.get(i).foundSolution()) {
-                System.out.println("Didn't find solution.");
+                System.out.println("Thread " + threads.get(i).getId() + ": Didn't find solution.");
             } else {
                 foundSolution = true;
-                System.out.println("Found solution.");
-                System.out.println(threads.get(i).getSolution());
+                System.out.println("Thread " + threads.get(i).getId() + ": Found solution: \n" + threads.get(i).getSolution());
                 if (threads.get(i).getSolution().getGlobalCost() < bestSolution.getGlobalCost()) {
                     bestSolution = threads.get(i).getSolution();
                 }
