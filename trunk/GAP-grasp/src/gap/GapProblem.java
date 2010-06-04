@@ -111,7 +111,8 @@ public class GapProblem {
             }
             jobDomains.get(i).clear();
             for (int j = 0; j < workersCount; j++) {               
-                if (set.getLimitTime(j) >= (gs.getWorkerTime(j) + set.getTime(j, i))) {
+                //if (set.getLimitTime(j) >= (gs.getWorkerTime(j) + set.getTime(j, i))) {
+                if (gs.canFeasiblyAssign(i, j)) {
                     jobDomains.get(i).add(new Integer(j));  // this value can be used!         
 
                 }
@@ -172,7 +173,7 @@ public class GapProblem {
     }
 
     public boolean generateGRASPSolution() {
-        return generateGRASPSolution(1000, .8);
+        return generateGRASPSolution(50, .3);
     }
     
     public boolean generateGRASPSolution(int iterations, double rclRatio) {
@@ -216,7 +217,7 @@ public class GapProblem {
     
     public GapSolution generateInitialSolutionForGrasp(Vector<Vector<Worker>> sortedWorkers, double rclRatio) {
         GapSolution gs = new GapSolution(jobsCount, workersCount, solution.getSettings());
-        Vector<Integer> jobsOrder = new Vector<Integer>(jobsCount);
+        /*Vector<Integer> jobsOrder = new Vector<Integer>(jobsCount);
         for (int i = 0; i < jobsCount; i++) {
             jobsOrder.add(i, i);
         }
@@ -226,12 +227,46 @@ public class GapProblem {
             int tmp = jobsOrder.get(pos);
             jobsOrder.set(pos, jobsOrder.get(i));
             jobsOrder.set(i, tmp);
+        }*/
+        Vector<Job> jobsOrder = new Vector<Job>(jobsCount);
+        for (int job = 0; job < jobsCount; job++) {
+            int minTime = Integer.MAX_VALUE;
+            int maxTime = Integer.MIN_VALUE;
+            int time;
+            int bestWorker = -1;
+            for (int worker = 0; worker < workersCount; worker++) {
+                time = gs.getSettings().getTime(worker, job);
+                if (time < minTime || minTime == -1) {
+                    minTime = time;
+                    bestWorker = worker;
+                }
+                if (time > maxTime) {
+                    maxTime = time;
+                }
+            }
+            jobsOrder.add(job, new Job(job, bestWorker));
+            jobsOrder.get(job).setMinTime(minTime);
+            jobsOrder.get(job).setMaxTime(maxTime);
         }
+        // Sort jobs by the minimum time they take to any worker in a descending
+        // order.
+        Collections.sort(jobsOrder, JOB_MINTIME_ORDER_DESC);
+
+        Random generator = new Random();
+
+        for (int i = 0; i < jobsCount; i++) {
+            int pos = generator.nextInt(Math.min(jobsCount - i, 2)) + i;
+            Job tmp = jobsOrder.get(pos);
+            jobsOrder.set(pos, jobsOrder.get(i));
+            jobsOrder.set(i, tmp);
+        }
+  
         fillJobDomains();
         arcConsistency(gs, -1);
         for (int i = 0; i < jobsCount; i++) {
-            int jobId = jobsOrder.get(i);
+            int jobId = jobsOrder.get(i).getId();
             Vector<Integer> rcl = makeRcl(gs, jobId, sortedWorkers.get(jobId), rclRatio);
+            //System.out.println("rcl size: " + rcl.size());
             if (rcl.size() != 0) {
                 int pos = generator.nextInt(rcl.size());
                 gs.assign(jobId, rcl.get(pos).intValue());
@@ -241,7 +276,7 @@ public class GapProblem {
             } else {
                 i--;
                 if (i < 0) return gs;
-                jobId = jobsOrder.get(i);
+                jobId = jobsOrder.get(i).getId();
                 gs.unassign(jobId);
                 arcConsistency(gs, jobId);
                 backtracksCount++;
@@ -253,12 +288,13 @@ public class GapProblem {
     
     private Vector<Integer> makeRcl(GapSolution gs, int jobId, Vector<Worker> workers, double ratio)  {
         int tmpRclCard = 0;
-        for (int i = 0; i < workers.size(); i++) {
+        /*for (int i = 0; i < workers.size(); i++) {
             if (gs.canFeasiblyAssign(jobId, workers.get(i).getWorkerId()) &&
                 jobDomains.get(jobId).contains(workers.get(i).getWorkerId())) tmpRclCard++;
-        }
-        int rclCard = (int) (tmpRclCard * ratio);
-        if (rclCard == 0 && tmpRclCard > 0) rclCard = 1;
+        }*/
+        int rclCard = (int) (workers.size() * ratio);
+        if (rclCard == 0) rclCard = 1;
+        //rclCard = 1;
         int rclSize = 0;
         Vector<Integer> rcl = new Vector<Integer>();
         for (int i = 0; i < workers.size() && rclSize < rclCard; i++) {

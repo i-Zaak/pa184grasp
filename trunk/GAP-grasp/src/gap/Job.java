@@ -11,6 +11,9 @@ public class Job implements Comparable {
     private int deltaMinMaxTime;
     private int bestWorkerId;
     
+    public Job(int id) {
+        this.id = id;
+    }
     
     public Job( int id, int deltaMinMaxTime, int bestWorkerId){
         this.id = id;
