@@ -277,30 +277,26 @@ public class Main {
         generateTimeGreedySolution(); //initial solution
 
         GapSolution bestSolution = myProblem.getSolution();
+        GapSolution bestFeasible = myProblem.getSolution();
         GapSettings settings = bestSolution.getSettings();
         int bestCost = bestSolution.getGlobalCost();
         int lowerBound = myProblem.getCostLowerBound();
         System.out.println("Lower bound of GlobalCost is " + lowerBound);
         int idle_iter = 0;
-        while (idle_iter < 100) {
-
-            GapSolution newSolution = myProblem.getSolution().getBestNeighbour();
+        while (idle_iter < 1000) {
+            GapSolution newSolution = bestSolution.getBestNeighbour(false);
             if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
-                bestSolution = new GapSolution(newSolution, settings); //best feasible solution this far
-
-                bestCost = bestSolution.getGlobalCost();
-                if (bestCost == lowerBound) // when we have found the best cost
-                {
-                    break;
-                }
+                bestFeasible = new GapSolution(newSolution, settings);
+                bestCost = bestFeasible.getGlobalCost();
+                if (bestCost == lowerBound) break;
             }
-            if (newSolution.equals(myProblem.getSolution())) {
-                    myProblem.getSolution().perturb();  // we are stucked
-                    idle_iter++;
-            } else {
-                myProblem.setSolution(newSolution);
+            if (newSolution.equals(bestSolution)) {
+                bestSolution.perturb();
+                idle_iter++;
             }
+            bestSolution = new GapSolution(newSolution, settings); //best solution this far
         }
+
         myProblem.setSolution(bestSolution);
         runtime = new Date().getTime() - runtime;
         System.out.println(myProblem.toString());
