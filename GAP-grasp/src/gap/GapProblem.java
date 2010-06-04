@@ -193,7 +193,7 @@ public class GapProblem {
     }
 
     public boolean generateGRASPSolution() {
-        return generateGRASPSolution(50, .1);
+        return generateGRASPSolution(50, .8);
     }
     
     public boolean generateGRASPSolution(int iterations, double rclRatio) {
@@ -241,7 +241,7 @@ public class GapProblem {
             Vector<Worker> tempWorkers = new Vector<Worker>(workersCount);
             for (int j = 0; j < workersCount; j++) {
                 //tempWorkers.add(new Worker(j, set.getCost(j,i)));
-                tempWorkers.add(new Worker(j, Integer.MAX_VALUE - set.getTime(j,i)));
+                tempWorkers.add(new Worker(j, set.getTime(j,i)));
                 System.out.println("w" + j + " t" + set.getTime(j,i));
             }
             if (!tempWorkers.isEmpty()) Collections.sort(tempWorkers);
