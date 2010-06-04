@@ -223,7 +223,8 @@ public class GapProblem {
      * @return True if there was feasible solution found, false otherwise.
      */
     public boolean generateGRASPSolution() {
-        return generateGRASPSolution(50, .5);
+        int numIterations = Math.max(jobsCount, 50);
+        return generateGRASPSolution(numIterations, .5);
     }
 
     /**

@@ -247,6 +247,10 @@ public class Main {
     public static void generateReport(String outputPrefix){
         GapSolution gs = myProblem.getSolution();
         GapSettings settings = gs.getSettings();
+        boolean dirCreated = (new File(outputPrefix)).mkdirs();
+        if(! dirCreated){
+            System.out.println("The directory " + outputPrefix + " was not created (already exists?).");
+        }
 
         String report = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"";
         report += "\n\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">";
@@ -281,11 +285,11 @@ public class Main {
 
 
         try {
-            FileWriter fstream = new FileWriter(outputPrefix + "solution.svg");
+            FileWriter fstream = new FileWriter(outputPrefix + "/solution.svg");
             BufferedWriter out = new BufferedWriter(fstream);
             out.write(myProblem.getSolution().toSVG());
             out.close();
-            fstream = new FileWriter(outputPrefix + "report.html");
+            fstream = new FileWriter(outputPrefix + "/report.html");
             out = new BufferedWriter(fstream);
             out.write(report);
             out.close();
