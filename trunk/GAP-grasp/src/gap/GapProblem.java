@@ -125,8 +125,9 @@ public class GapProblem {
     public int getBacktracksCount() {
         return backtracksCount;
     }
-
-    public boolean generateGreedySolution() {
+    
+    // Generate solution hungry for time. It is a quick way to obtain a feasible solution    
+    public boolean generateTimeGreedySolution() {
         GapSettings set = solution.getSettings();
         Vector<Job> sortedJobs = new Vector<Job>(jobsCount);
         int minTime, maxTime, bestWorker, time;
@@ -148,25 +149,41 @@ public class GapProblem {
             sortedJobs.add(job, new Job(job, maxTime - minTime, bestWorker));
         }
         Collections.sort(sortedJobs);
+        fillJobDomains();
+        arcConsistency(-1);
         System.out.println(sortedJobs);
         for (int i = 0; i < jobsCount; i++) {
             Job job = sortedJobs.get(i);
-            if (!solution.assign(job.getId(), job.getBestWorkerId())) {
-                boolean assigned = false;
-                for (int j = 0; j < workersCount; j++) {
-                    if (solution.assign(job.getId(), j)) {
-                        assigned = true;
-                        break;
-                    }
+            if (!jobDomains.get(job.getId()).isEmpty()) { 
+                // There is pretty good chance to get deterministic asignment
+                if (jobDomains.get(job.getId()).contains(job.getBestWorkerId())) {
+                    solution.assign(job.getId(), job.getBestWorkerId());
+                    int pos = jobDomains.get(job.getId()).indexOf(job.getBestWorkerId());
+                    jobDomains.get(job.getId()).remove(pos);
+                } else {
+                    int min = Integer.MAX_VALUE;
+                    int position = -1;
+                    for (int j = 0; j < jobDomains.get(job.getId()).size(); j++) {
+                        if (min > set.getTime(jobDomains.get(job.getId()).get(j),job.getId())) {
+                            min = set.getTime(jobDomains.get(job.getId()).get(j),job.getId());
+                            position = j;
+                        }
+                    }    
+                    solution.assign(job.getId(), jobDomains.get(job.getId()).get(position));
+                    jobDomains.get(job.getId()).remove(position);            
                 }
-                if (!assigned) {
-                    System.out.println("Failed to assign job " + job.getId());
-                    System.out.println("FIXME: implement backtracking in Greedy solution generation!");
+                arcConsistency(-1);
+            } else {
+                i--;
+                if (i < 0) 
                     return false;
-                }
+                int jobId = sortedJobs.get(i).getId();
+                solution.unassign(jobId);
+                arcConsistency(jobId);
+                backtracksCount++;
+                i--;
             }
         }
-
         return true;
     }
 
@@ -624,8 +641,8 @@ public class GapProblem {
         return bestSolution;
    }
 
-    // My take on greedy algrithm with backtracing
-    public boolean generateGreediestSolution() {
+    // greedy algrithm with backtracing hungry for costs
+    public boolean generateGreedySolution() {
         GapSettings set = solution.getSettings();
         arcConsistency(-1);
         double[] min_cost = new double[jobsCount];
