@@ -193,7 +193,7 @@ public class GapProblem {
     }
 
     public boolean generateGRASPSolution() {
-        return generateGRASPSolution(50, .8);
+        return generateGRASPSolution(50, .5);
     }
     
     public boolean generateGRASPSolution(int iterations, double rclRatio) {
@@ -201,8 +201,8 @@ public class GapProblem {
         GapSolution bestSolution = new GapSolution(jobsCount, workersCount, solution.getSettings());
         int bestCost = Integer.MAX_VALUE;
         boolean forceBacktrack = false;
-        int maxBacktracks = 500000;
-        double maxFailedIterRatio = 0.5;
+        int maxBacktracks = 5000;
+        double maxFailedIterRatio = 0.8;
         int failedIterations = 0;
 
         for (int i = 0; i < iterations; i++) {
@@ -221,6 +221,7 @@ public class GapProblem {
             } else {
                 System.out.println("Initial solution found. Cost: " + gs.getGlobalCost());
                 System.out.println(gs);
+                maxBacktracks *=0.8;
             }
             gs = new GapSolution(localSearch(gs), gs.getSettings());
             System.out.println("After local search: " + gs.getGlobalCost());
@@ -288,7 +289,6 @@ public class GapProblem {
         // Sort jobs by the minimum time they take to any worker in a descending
         // order.
         Collections.sort(jobsOrder);
-System.out.println(jobsOrder);
         Random generator = new Random();
 
         for (int i = 0; i < jobsCount; i++) {
@@ -304,7 +304,6 @@ System.out.println(jobsOrder);
         for (int i = 0; i < jobsCount; i++) {
             int jobId = jobsOrder.get(i).getId();
             Vector<Integer> rcl = makeRcl(gs, jobId, sortedWorkers.get(jobId), rclRatio);
-            //System.out.println("rcl size: " + rcl.size());
             if (rcl.size() != 0) {
                 int pos = generator.nextInt(rcl.size());
                 gs.assign(jobId, rcl.get(pos).intValue());
