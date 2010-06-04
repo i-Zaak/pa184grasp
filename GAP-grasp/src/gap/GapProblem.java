@@ -1,11 +1,13 @@
 package gap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.Vector;
 import java.util.Comparator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -182,7 +184,8 @@ public class GapProblem {
         int bestCost = Integer.MAX_VALUE;
         for (int i = 0; i < iterations; i++) {
             System.out.println("grasp_iter: " + i);
-            GapSolution gs = generateInitialSolutionForGrasp(sortedWorkers, rclRatio);
+            //GapSolution gs = generateInitialSolutionForGrasp(sortedWorkers, rclRatio);
+            GapSolution gs = generateInitialSolutionForGraspGreediest(rclRatio);
             if (!gs.allAssigned()) {
                 System.out.println("No initial solution found.");
                 return false;
@@ -285,7 +288,85 @@ public class GapProblem {
         }
         return gs;
     }
-    
+
+    public GapSolution generateInitialSolutionForGraspGreediest(double rclRatio){
+        GapSolution gs = new GapSolution(jobsCount, workersCount, solution.getSettings());
+        GapSettings set = gs.getSettings();
+        fillJobDomains();
+        arcConsistency(-1);
+        double[] min_cost = new double[jobsCount];
+        int[] jobs = new int[jobsCount];
+
+        for (int i = 0; i < jobsCount; i++) {
+            jobs[i] = i;
+            int min = Integer.MAX_VALUE;
+            for (int j = 0; j < workersCount; j++) {
+                if (min > set.getCost(j, i)) {
+                    min = set.getCost(j, i);
+                    min_cost[i] = min;
+                }
+            }
+        }
+
+        // bubly bubly
+        for (int i = 0; i < jobsCount - 1; i++) {
+            for (int j = i + 1; j < jobsCount; j++) {
+                if (min_cost[i] > min_cost[j]) {
+                    double tmp = min_cost[i];
+                    min_cost[i] = min_cost[j];
+                    min_cost[j] = tmp;
+                    tmp = jobs[i];
+                    jobs[i] = jobs[j];
+                    jobs[j] = (int) tmp;
+                }
+            }
+        }
+
+        List<Integer> unassignedJobs = new LinkedList<Integer>();
+        for(int i = 0; i < jobsCount; i++){
+            unassignedJobs.add(jobs[i]);
+        }
+        Random generator = new Random();
+
+        int rclSize = (int)(jobsCount * rclRatio);
+        if(rclSize == 0) rclSize = 1;
+        for (int i = 0; i < jobsCount; i++) {
+            //int job = jobs[i];
+            int r = generator.nextInt(Math.min(rclSize,unassignedJobs.size()));
+            int job = unassignedJobs.get(r);
+
+            if (!jobDomains.get(job).isEmpty()) {
+                int min = Integer.MAX_VALUE;
+                int best_pos = -1;
+                for (int j = 0; j < jobDomains.get(job).size(); j++) {
+                    int worker = jobDomains.get(job).get(j).intValue();
+                    if (min > set.getCost(worker, job)) {
+                        min = set.getCost(worker, job);
+                        best_pos = j;
+                    }
+                }
+                int worker = jobDomains.get(job).get(best_pos).intValue();
+                gs.assign(job, worker, true);
+                unassignedJobs.remove(r);
+                jobDomains.get(job).remove(best_pos);
+                arcConsistency(-1); // arc consistency on all not assigned variables
+
+            } else {
+                i = i - 1; // unassign previous
+
+                if (i < 0) {
+                    return gs; // no solution
+
+                }
+                backtracksCount++;
+                gs.unassign(jobs[i]);
+                arcConsistency(jobs[i]);
+                i = i - 1; // just step back in for cycle to get to the unassign variable
+
+            }
+        }
+        return gs;
+    }
     private Vector<Integer> makeRcl(GapSolution gs, int jobId, Vector<Worker> workers, double ratio)  {
         int tmpRclCard = 0;
         /*for (int i = 0; i < workers.size(); i++) {
