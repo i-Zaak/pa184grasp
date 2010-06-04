@@ -2,7 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
+//gap12.txt - problems 1,3
+//gap9.txt - problem 3
+//wrong count of numbers -> fixed?
 package gap;
 
 import java.io.BufferedReader;
@@ -52,6 +54,12 @@ public class GapParser {
         for (int i = 0; i < workersCount; i++) { // reading costs
             line = in.readLine();
             tmp = line.split(" ");
+            if (tmp.length != jobCount) {
+                System.out.println("Parser: Format of file is wrong");
+                System.out.println("Parser: Count of workerJobCost elements is " + tmp.length + "(should be "+ jobCount + ")");
+                return null;
+            }
+            
             for (int j=0; j < tmp.length; j++){
                 workerJobCost[i][j] = Integer.parseInt(tmp[j]);
             }
@@ -60,6 +68,11 @@ public class GapParser {
         for (int i = 0; i < workersCount; i++) { // reading time
             line = in.readLine();
             tmp = line.split(" ");
+            if (tmp.length != jobCount) {
+                System.out.println("Parser: Format of file is wrong");
+                System.out.println("Parser: Count of workerJobTime elements is " + tmp.length + "(should be "+ jobCount + ")");
+                return null;
+            }
             for (int j=0; j < tmp.length; j++){
                 workerJobTime[i][j] = Integer.parseInt(tmp[j]);
             }
@@ -67,6 +80,12 @@ public class GapParser {
         
         line = in.readLine();
         tmp = line.split(" ");    
+        if (tmp.length != workersCount) {
+                System.out.println("Parser: Format of file is wrong");
+                System.out.println("Parser: Count of workerLimitTime elements is " + tmp.length + "(should be "+ workersCount + ")");
+                return null;
+        }
+        
         for (int i=0; i < tmp.length; i++){
             workerLimitTime[i] =Integer.parseInt(tmp[i]);
         }
