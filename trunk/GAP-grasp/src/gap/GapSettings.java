@@ -1,13 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package gap;
 
 /**
- *
- * @author Salla
+ * Class keeping input values of the problem.
  */
 public class GapSettings {
 
@@ -33,6 +27,5 @@ public class GapSettings {
     public int getLimitTime(int worker){
         return workerLimitTime[worker];
     }
-    
     
 }

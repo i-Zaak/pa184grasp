@@ -1,19 +1,16 @@
 package gap;
 
 /**
- *
- * @author izaak
+ * Class for representation of a job, created mainly for sorting reasons.
  */
 public class Job implements Comparable {
     private int id;
     private int minTime;
     private int maxTime;
+    /** Difference between minimum and maximum time */
     private int deltaMinMaxTime;
+    /** Id of the optimal worker for this job */
     private int bestWorkerId;
-    
-    public Job(int id) {
-        this.id = id;
-    }
     
     public Job( int id, int deltaMinMaxTime, int bestWorkerId){
         this.id = id;
@@ -59,6 +56,10 @@ public class Job implements Comparable {
         return bestWorkerId;
     }
     
+    /**
+     * The default comparison method based on the difference between minimum
+     * and maximum time needed for job completion.
+     */
     public int compareTo(Object otherJob) {
         int otherDelta = ((Job) otherJob).getDeltaMinMaxTime();
         if(deltaMinMaxTime < otherDelta){
@@ -75,7 +76,4 @@ public class Job implements Comparable {
     public String toString() {
         return Integer.toString(this.id);
     }
-    
-    
-    
 }

@@ -34,10 +34,12 @@ public class Main {
         boolean paralel = false;
         int numThreads = 1;
 
-        // the loop to determine users mind :)
         // USAGE: java -jar GAP-grasp.jar -f gap1.txt -n 1 --greedy --local
         // get problem 1 from file in ./data/gap1.txt, show greedy solution and do the local search
 
+        /**
+         * Command-line arguments processing.
+         */
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("-f") || args[i].equals("--file")) { // -f file_name.txt
 
@@ -100,8 +102,6 @@ public class Main {
                 System.out.println("Number of threads " + numThreads);
                 continue;
             }
-
-
         }
 
         if (file_name.equals("")) {
@@ -115,9 +115,9 @@ public class Main {
             return;
         }
 
-        GapParser parser = new GapParser(file); //files in ./data/ dir
+        GapParser parser = new GapParser(file);
 
-        System.out.println("Reading information for problem " + position);
+        System.out.println("Reading input for problem " + position);
         myProblem = parser.parseProblem(position);
         System.out.println("Done");
 
