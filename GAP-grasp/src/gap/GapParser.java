@@ -51,7 +51,7 @@ public class GapParser {
             line = in.readLine();
             tmp = line.split(" ");
             if (tmp.length != jobCount) {
-                System.out.println("Parser: Format of file is wrong");
+                System.out.println("Parser: File format is wrong");
                 System.out.println("Parser: Count of workerJobCost elements is " + tmp.length + "(should be "+ jobCount + ")");
                 return null;
             }
