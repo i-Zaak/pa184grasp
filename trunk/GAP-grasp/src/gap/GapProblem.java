@@ -164,7 +164,7 @@ public class GapProblem {
     }
 
     public boolean generateGRASPSolution() {
-        return generateGRASPSolution(1000, .2);
+        return generateGRASPSolution(1000, .8);
     }
     
     public boolean generateGRASPSolution(int iterations, double rclRatio) {
@@ -181,6 +181,7 @@ public class GapProblem {
                 System.out.println("Initial solution found. Cost: " + gs.getGlobalCost());
             }
             gs = new GapSolution(localSearch(gs), gs.getSettings());
+            System.out.println("After local search: " + gs.getGlobalCost());
             if (gs.getGlobalCost() < bestCost) {
                 bestSolution = new GapSolution(gs, gs.getSettings());
                 bestCost = gs.getGlobalCost();
@@ -222,7 +223,6 @@ public class GapProblem {
         arcConsistency(gs, -1);
         for (int i = 0; i < jobsCount; i++) {
             int jobId = jobsOrder.get(i);
-            if (i == 0) System.out.println(i);
             Vector<Integer> rcl = makeRcl(gs, jobId, sortedWorkers.get(jobId), rclRatio);
             if (rcl.size() != 0) {
                 int pos = generator.nextInt(rcl.size());
@@ -457,7 +457,6 @@ public class GapProblem {
                     neighSolution.assign(i, j, true);
                     double cost = neighSolution.getPenalty();
                     if ((cost < bestCost) && (!feasible || neighSolution.isFeasible())) {
-                        System.out.println("neighbour found");
                         bestSolution = new GapSolution(neighSolution, gs.getSettings());
                         bestCost = cost;
                     }
@@ -590,44 +589,15 @@ public class GapProblem {
         solution = bestSolution;
         return foundSolution;
     }
-   
-        // with infeasible solution -> hard to get a feasible one :(
-    public GapSolution localSearch(GapSolution gs) {
-        GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
-        GapSettings settings = bestSolution.getSettings();
-        int bestCost = bestSolution.getGlobalCost();
-        int min_cost = getCostLowerBound(bestSolution.getSettings());
-        int idle_iter = 0;
-        while (idle_iter < 1000) { //until we did 1000 perturbations
-            //System.out.println("iter:" + idle_iter);
-            //System.out.println(bestCost);
-            GapSolution newSolution = getBestNeighbour(bestSolution, true);
-            if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
-                bestSolution = new GapSolution(newSolution, settings); //best feasible solution this far
-                
-                bestCost = bestSolution.getGlobalCost();
-                if (bestCost == min_cost) // when we have found the best cost
-                {
-                    break;
-                }
-            }
-            if (newSolution.equals(bestSolution)) {
-                return bestSolution;
-            }
-        }
-        return bestSolution;
-    }
-    
-        public GapSolution localSearchMIRKA(GapSolution gs) {
+       
+        public GapSolution localSearch(GapSolution gs) {
         GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
         GapSettings settings = bestSolution.getSettings();
         GapSolution bestFeasible = new GapSolution(gs, gs.getSettings());
         int bestCost = bestSolution.getGlobalCost();
         int min_cost = getCostLowerBound(bestSolution.getSettings());
         int idle_iter = 0;
-        while (idle_iter < 1000) { //until we did 1000 perturbations
-            //System.out.println("iter:" + idle_iter);
-            //System.out.println(bestCost);
+        while (idle_iter < 100) {
             GapSolution newSolution = getBestNeighbour(bestSolution, false);
             bestSolution = new GapSolution(newSolution, settings); //best solution this far
             if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
@@ -639,8 +609,8 @@ public class GapProblem {
                 }
             }
             if (newSolution.equals(bestSolution)) {
-                perturbate(bestSolution);                
-                idle_iter++;
+                perturbate(bestSolution);
+                idle_iter++;                
             }
         }
         return bestFeasible;

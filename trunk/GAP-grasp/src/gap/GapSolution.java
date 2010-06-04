@@ -204,10 +204,10 @@ public class GapSolution {
     public String toString(){
         String output = "Solution:\n";
         for (int i=0; i < workersCount; i++) {
-            output += "worker " + i + ": items: ";
+            output += "worker " + (i+1) + ": items: ";
             for (int j=0; j < jobsCount; j++) {
                 if (getWorker(j) == i) {
-                    output +=  j + ", ";
+                    output +=  (j+1) + ", ";
                 }                   
             }
             output += " total time used: " + getWorkerTime(i) + "/" + settings.getLimitTime(i)+ "\n";
