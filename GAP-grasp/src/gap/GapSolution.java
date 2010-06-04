@@ -374,7 +374,7 @@ public class GapSolution {
         int perturbOptions = 2;
         Random generator = new Random();
         int perturbId = generator.nextInt(perturbOptions);
-        switch (perturbOptions) {
+        switch (perturbId) {
             case 0: perturbNextJobWorkers();
                     break;
             case 1: perturbNextWorker();
