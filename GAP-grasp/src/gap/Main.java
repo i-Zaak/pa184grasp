@@ -293,11 +293,12 @@ public class Main {
             if (newSolution.equals(bestSolution)) {
                 bestSolution.perturb();
                 idle_iter++;
+            } else {
+                bestSolution = new GapSolution(newSolution, settings); //best solution this far
             }
-            bestSolution = new GapSolution(newSolution, settings); //best solution this far
         }
 
-        myProblem.setSolution(bestSolution);
+        myProblem.setSolution(bestFeasible);
         runtime = new Date().getTime() - runtime;
         System.out.println(myProblem.toString());
         System.out.println("Solution found with local search in " + runtime + " ms");
