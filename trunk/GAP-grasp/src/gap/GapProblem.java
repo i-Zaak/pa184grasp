@@ -1,7 +1,6 @@
 package gap;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Random;
@@ -125,6 +124,7 @@ public class GapProblem {
     public int getBacktracksCount() {
         return backtracksCount;
     }
+
     
     // Generate solution hungry for time. It is a quick way to obtain a feasible solution    
     public boolean generateTimeGreedySolution() {
@@ -184,6 +184,7 @@ public class GapProblem {
                 i--;
             }
         }
+
         return true;
     }
 
@@ -603,36 +604,6 @@ System.out.println(jobsOrder);
         backtracksCount = 0;
     }
 
-    public boolean perturbate() {
-        return perturbate(solution);
-    }
-
-    //shift in solution
-    public boolean perturbate(GapSolution gs) {
-        int first_worker = gs.getWorker(0);
-        for (int i = 0; i < jobsCount - 1; i++) {
-            gs.unassign(i);
-            gs.assign(i, gs.getWorker(i + 1), true);
-        }
-        gs.unassign(jobsCount - 1);
-        gs.assign(jobsCount - 1, first_worker, true);
-        return gs.isFeasible();
-    }
-
-    public boolean perturbate2() {
-        return perturbate2(solution);
-    }
-
-    //change workers posession
-    public boolean perturbate2(GapSolution gs) {
-
-        for (int i = 0; i < jobsCount; i++) {
-            int prev_worker = gs.unassign(i);
-            gs.assign(i, (prev_worker + 1) % workersCount, true);
-        }
-        return gs.isFeasible();
-    }
-
     public GapSolution getSolution() {
         return solution;
     }
@@ -666,9 +637,35 @@ System.out.println(jobsOrder);
     public GapSolution getBestNeighbour(GapSolution gs) {
         return getBestNeighbour(gs, false);
     }
+    
+    public GapSolution getBestNeighbour(GapSolution gs, boolean feasible) {
+        double bestCost = gs.getPenalty();
+        double neighCost;
+        GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
+        GapSolution neighSolution = new GapSolution(gs, gs.getSettings());
+        neighSolution = getBestJobMoveNeighbour(gs, feasible);
+        neighCost = neighSolution.getPenalty();
+        if ((neighCost < bestCost) && (!feasible || neighSolution.isFeasible())) {
+            bestSolution = new GapSolution(neighSolution, gs.getSettings());
+            bestCost = neighCost;
+        }
+        neighSolution = getBestTwoJobSwapNeighbour(gs, feasible);
+        neighCost = neighSolution.getPenalty();
+        if ((neighCost < bestCost) && (!feasible || neighSolution.isFeasible())) {
+            bestSolution = new GapSolution(neighSolution, gs.getSettings());
+            bestCost = neighCost;
+        }
+        neighSolution = getBestAllJobsSwapNeihgbour(gs, feasible);
+        neighCost = neighSolution.getPenalty();
+        if ((neighCost < bestCost) && (!feasible || neighSolution.isFeasible())) {
+            bestSolution = new GapSolution(neighSolution, gs.getSettings());
+            bestCost = neighCost;
+        }
+        return bestSolution;
+    }
 
     //change one worker to get neighbour
-    public GapSolution getBestNeighbour(GapSolution gs, boolean feasible) {
+    public GapSolution getBestJobMoveNeighbour(GapSolution gs, boolean feasible) {
         double bestCost = gs.getPenalty();
         GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
         for (int i = 0; i < jobsCount; i++) {
@@ -690,7 +687,7 @@ System.out.println(jobsOrder);
         return bestSolution;
     }
         // swap two jobs to get neighbour
-        public GapSolution getBestNeighbour2(GapSolution gs, boolean feasible) {
+        public GapSolution getBestTwoJobSwapNeighbour(GapSolution gs, boolean feasible) {
         double bestCost = gs.getPenalty();
         GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
         for (int i = 0; i < jobsCount; i++) 
@@ -712,6 +709,22 @@ System.out.println(jobsOrder);
            }
         return bestSolution;
    }
+        
+    public GapSolution getBestAllJobsSwapNeihgbour(GapSolution gs, boolean feasible) {
+        double bestCost = gs.getPenalty();
+        GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
+        for (int i = 0; i < workersCount; i++)
+            for (int j = i + 1; j < workersCount; j++) {
+                GapSolution neighSolution = new GapSolution(gs, gs.getSettings());
+                neighSolution.swapWorkers(i, j);
+                double cost = neighSolution.getPenalty();
+                if ((cost < bestCost) && (!feasible || neighSolution.isFeasible())) {
+                    bestSolution = new GapSolution(neighSolution, gs.getSettings());
+                    bestCost = cost;
+                }
+            }
+        return bestSolution;
+    }
 
     // greedy algrithm with backtracing hungry for costs
     public boolean generateGreedySolution() {
@@ -812,7 +825,7 @@ System.out.println(jobsOrder);
         solution = bestSolution;
         return foundSolution;
     }
-       
+     
     public GapSolution localSearch(GapSolution gs) {
         GapSolution bestSolution = new GapSolution(gs, gs.getSettings());
         GapSettings settings = bestSolution.getSettings();
@@ -821,8 +834,9 @@ System.out.println(jobsOrder);
         int min_cost = getCostLowerBound(bestSolution.getSettings());
         int idle_iter = 0;
         while (idle_iter < 100) {
-            GapSolution newSolution = getBestNeighbour2(bestSolution, false);
+            GapSolution newSolution = getBestNeighbour(bestSolution, false);
             bestSolution = new GapSolution(newSolution, settings); //best solution this far
+
             if (newSolution.isFeasible() && newSolution.getGlobalCost() < bestCost) {
                 bestFeasible = new GapSolution(newSolution, settings);
                 bestCost = bestSolution.getGlobalCost();
@@ -832,8 +846,8 @@ System.out.println(jobsOrder);
                 }
             }
             if (newSolution.equals(bestSolution)) {
-                perturbate(bestSolution);
-                idle_iter++;                
+                bestSolution.perturb();
+                idle_iter++;
             }
         }
         return bestFeasible;

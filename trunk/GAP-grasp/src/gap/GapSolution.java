@@ -1,5 +1,7 @@
 package gap;
 
+import java.util.Random;
+
 /**
  * Class representing a single solution of the GAP problem.
  */
@@ -42,7 +44,11 @@ public class GapSolution {
         }    
         return true;        
     }
-    
+
+    /**
+     * Return id of worker assigned to the job.
+     * @param job Id of the job.
+     */
     public int getWorker(int job){
         return assignment[job];
     }
@@ -187,7 +193,6 @@ public class GapSolution {
         return globalCost;
     }
 
-/*
     public int recountCostAndTime(){
         globalCost = 0;
         for (int i=0; i < workersCount; i++)
@@ -202,7 +207,6 @@ public class GapSolution {
         }
         return globalCost;
     }
-*/  
 
     /**
      * Clear the solution, i.e., unassign all workers and reset their times;
@@ -237,7 +241,53 @@ public class GapSolution {
         }
             return true;
     }
+
+    /**
+     * Swap jobs of two workers.
+     * @param id1
+     * @param id2
+     * @return True if resulting assignment is feasible, false otherwise.
+     */
+    public boolean swapWorkers(int id1, int id2) {
+        for (int i = 0; i < jobsCount; i++) {
+            if (assignment[i] == id1) {
+                moveJob(id2, i);
+                continue;
+            }
+            if (assignment[i] == id2) {
+                moveJob(id1, i);
+                continue;
+            }
+        }
+        return isFeasible();
+    }
     
+    /**
+     * Move the given job to the given worker and update the times and costs.
+     * @param worker
+     * @param job
+     * @return True if the resulting assignment is feasible, false otherwise.
+     */
+    public boolean moveJob(int worker, int job) {
+        return moveJob(worker, job, true);
+    }
+    
+    /**
+     * Move the given job to the worker.
+     * @param worker
+     * @param job
+     * @param update True if times and costs shall be updated, false otherwise.
+     * @return True if the resulting assignment is feasible, false otherwise.
+     */
+    public boolean moveJob(int worker, int job, boolean update) {
+        unassign(job, update);
+        assignment[job] = worker;
+        if (update) {
+            workerTotalTime[worker] += settings.getTime(worker, job);
+            globalCost += settings.getCost(worker, job);
+        }
+        return workerTotalTime[worker] <= settings.getLimitTime(worker);
+    }
     /**
      * Output the solution as simple table displaying worker/job assignments,
      * time required for each worker and global cost of the solution.
@@ -318,5 +368,41 @@ public class GapSolution {
     
     public GapSettings getSettings(){
         return settings;
+    }
+    
+    public boolean perturb() {
+        int perturbOptions = 2;
+        Random generator = new Random();
+        int perturbId = generator.nextInt(perturbOptions);
+        switch (perturbOptions) {
+            case 0: perturbNextJobWorkers();
+                    break;
+            case 1: perturbNextWorker();
+                    break;
+            default: break;
+        }
+        return isFeasible();
+    }
+    
+    //shift in solution
+    public boolean perturbNextJobWorkers() {
+        int first_worker = getWorker(0);
+        for (int i = 0; i < jobsCount - 1; i++) {
+            unassign(i);
+            assign(i, getWorker(i + 1), true);
+        }
+        unassign(jobsCount - 1);
+        assign(jobsCount - 1, first_worker, true);
+        return isFeasible();
+    }
+
+    //change workers posession
+    public boolean perturbNextWorker() {
+
+        for (int i = 0; i < jobsCount; i++) {
+            int prev_worker = unassign(i);
+            assign(i, (prev_worker + 1) % workersCount, true);
+        }
+        return isFeasible();
     }
 }
