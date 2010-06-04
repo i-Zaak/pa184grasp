@@ -36,7 +36,15 @@ public class GapProblem {
             } else if (minTime2 < minTime1) {
                 return -1;
             } else {
-                return 0;
+                int maxTime1 = j1.getMaxTime();
+                int maxTime2 = j2.getMaxTime();
+                if (maxTime1 < maxTime2) {
+                    return 1;
+                } else if (maxTime2 < maxTime1) {
+                    return -1;
+                } else {
+                    return 0;
+                }
             }
         }
     };
@@ -287,19 +295,25 @@ public class GapProblem {
         Vector<Job> sortedJobs = new Vector<Job>(jobsCount);
         int minTime, bestWorker, time;
         minTime = bestWorker = -1;
+        int maxTime;
 
         // Determine the shortest time needed for completion of each job.
         for (int job = 0; job < jobsCount; job++) {
-
+            minTime = Integer.MAX_VALUE;
+            maxTime = Integer.MIN_VALUE;
             for (int worker = 0; worker < workersCount; worker++) {
                 time = set.getTime(worker, job);
                 if (time < minTime || minTime == -1) {
                     minTime = time;
                     bestWorker = worker;
                 }
+                if (time > maxTime) {
+                    maxTime = time;
+                }
             }
             sortedJobs.add(job, new Job(job, bestWorker));
             sortedJobs.get(job).setMinTime(minTime);
+            sortedJobs.get(job).setMaxTime(maxTime);
         }
         // Sort jobs by the minimum time they take to any worker in a descending
         // order.

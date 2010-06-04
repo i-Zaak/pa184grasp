@@ -7,6 +7,7 @@ package gap;
 public class Job implements Comparable {
     private int id;
     private int minTime;
+    private int maxTime;
     private int deltaMinMaxTime;
     private int bestWorkerId;
     
@@ -14,12 +15,14 @@ public class Job implements Comparable {
     public Job( int id, int deltaMinMaxTime, int bestWorkerId){
         this.id = id;
         this.minTime = -1;
+        this.maxTime = -1;
         this.deltaMinMaxTime = deltaMinMaxTime;
         this.bestWorkerId = bestWorkerId;
     }
     
     public Job (int id, int bestWorkerId) {
         this.id = id;
+        this.maxTime = -1;
         this.minTime = -1;
         this.deltaMinMaxTime = -1;
         this.bestWorkerId = bestWorkerId;
@@ -33,6 +36,14 @@ public class Job implements Comparable {
         return this.minTime;
     }
     
+    public void setMaxTime(int maxTime) {
+        this.maxTime = maxTime;
+    }
+
+    public int getMaxTime() {
+        return this.maxTime;
+    }
+
     public int getId(){
         return id;        
     }
