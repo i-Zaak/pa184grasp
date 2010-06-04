@@ -247,7 +247,8 @@ public class Main {
         if (solved) {
             System.out.println(myProblem.toString());
             System.out.println("Time greedy solution found in " + runtime + " ms with " + myProblem.getBacktracksCount() + " backtracks");
-              System.out.println(myProblem.toString());
+        } else {        
+            System.out.println(myProblem.toString());
             System.out.println("No solution:(");
         }
     }    
@@ -277,6 +278,7 @@ public class Main {
             }
             if (newSolution.equals(myProblem.getSolution())) {
                     myProblem.getSolution().perturb();  // we are stucked
+                    idle_iter++;
             } else {
                 myProblem.setSolution(newSolution);
             }
