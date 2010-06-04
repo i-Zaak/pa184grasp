@@ -1,8 +1,7 @@
 package gap;
 
 /**
- *
- * @author Salla
+ * Class representing a single solution of the GAP problem.
  */
 public class GapSolution {
 
@@ -44,16 +43,6 @@ public class GapSolution {
         return true;        
     }
     
-    // get first job without worker
-    public int getFirstUnassign() {
-        for (int i=0; i < jobsCount; i++) {
-            if (getWorker(i) == -1){
-                return i;
-            }
-        }    
-        return -1;        
-    } 
-    
     public int getWorker(int job){
         return assignment[job];
     }
@@ -72,12 +61,24 @@ public class GapSolution {
         return workerTotalTime[worker];
     }
     
-        // assign worker to job
+    /**
+     * Assigns job to a worker, don't accept infeasible solution.
+     * @param job
+     * @param worker
+     * @return True if job was actually assigned, false otherwise.
+     */
     public boolean assign(int job, int worker) {
         return assign(job, worker, false);
     }
     
-    // assign worker to job, are we accepting infeasible solutions?
+    /**
+     * Assiign job to a worker.
+     * @param job
+     * @param worker
+     * @param infeasibility Determines whether infeasible assignment should be
+     *  accepted or not.
+     * @return True if job was actually assigned, false otherwise.
+     */
     public boolean assign(int job, int worker, boolean infeasibility){
         if (isAssigned(job)) // already assigned
             return false;
@@ -92,19 +93,36 @@ public class GapSolution {
         return true;
     }
     
+    /**
+     * Determines whether the job can be feasibly assigned to the specified worker or not.
+     * @param job
+     * @param worker
+     * @return True if the job can be feasibly assigne, false otherwise.
+     */
     public boolean canFeasiblyAssign(int job, int worker) {
         if ((getWorkerTime(worker) + settings.getTime(worker, job) ) > settings.getLimitTime(worker)) {
             return false;
         }
         return true;
     }
-    
-    // unassign job
+
+    /**
+     * Unassign the job from a worker and recompute the worker's total time and
+     * total cost of the solution.
+     * @param job
+     * @return Id of the unassigned worker.
+     */
     public int unassign(int job){
         return unassign(job, true);
     }
     
-    // unassign job, do we want to update cost and time?
+    /**
+     * Unassign the job from a worker.
+     * @param job
+     * @param update True if the worker's total time and total cost of the solution
+     *   should be recomputed, false otherwise.
+     * @return Id of the unassigned worker.
+     */
     public int unassign(int job, boolean update){
         int prev_worker = getWorker(job);
         removeWorker(job);
@@ -116,7 +134,10 @@ public class GapSolution {
         return prev_worker;
     }
     
-    // is the solution feasible?
+    /**
+     * Determines whether the solution is feasible or not.
+     * @return True if the solution is feasible, false otherwise.
+     */
     public boolean isFeasible() {
         for (int i=0; i < workersCount; i++) {
             if (workerTotalTime[i] > settings.getLimitTime(i))
@@ -144,6 +165,11 @@ public class GapSolution {
         return workersCount;
     }
 
+    /**
+     * Calculate the ratio between time overdues of an infeasible solution and
+     * sum of the time limits of all workers.
+     * @return The ratio
+     */
     public double overTime(){
         double over = 0;
         int global_time = 0;
@@ -151,15 +177,17 @@ public class GapSolution {
              if (workerTotalTime[i] > settings.getLimitTime(i))
                 over += workerTotalTime[i] - settings.getLimitTime(i);
              global_time += settings.getLimitTime(i);
-        }    
-        over = over/global_time;
-        return over;    
+        }
+        if (global_time != 0)
+            return over / global_time;
+        else return 0;
     }
             
     public int getGlobalCost(){
         return globalCost;
     }
-       
+
+/*
     public int recountCostAndTime(){
         globalCost = 0;
         for (int i=0; i < workersCount; i++)
@@ -174,7 +202,11 @@ public class GapSolution {
         }
         return globalCost;
     }
-        
+*/  
+
+    /**
+     * Clear the solution, i.e., unassign all workers and reset their times;
+     */
     public void clear(){
       for (int i=0; i < jobsCount; i++) 
             removeWorker(i);
@@ -184,10 +216,20 @@ public class GapSolution {
       globalCost = 0;    
     }
     
+    /**
+     * Calculate penalty of the infeasible solution based on global cost and time
+     * overdues.
+     * @return Value of the penalty.
+     */
     public double getPenalty(){
        return globalCost*(1 + overTime());
     }
 
+    /**
+     * Compares if two solutions are equal in terms of worker assignment.
+     * @param solution
+     * @return
+     */
     public boolean equals(GapSolution solution){
         for (int i = 0; i < jobsCount; i++) {
            if (getWorker(i) !=  solution.getWorker(i))
@@ -196,7 +238,11 @@ public class GapSolution {
             return true;
     }
     
-    @Override // lame, but it will do for now
+    /**
+     * Output the solution as simple table displaying worker/job assignments,
+     * time required for each worker and global cost of the solution.
+     */
+    @Override
     public String toString(){
         String output = "Solution:\n";
         for (int i=0; i < workersCount; i++) {
@@ -212,6 +258,10 @@ public class GapSolution {
         return output;
     }
     
+    /**
+     * Output a graphical representation of the solution in the SVG format.
+     * @return Text that should be written to .svg file.
+     */
     public String toSVG(){
         int width = 1300;
         int height = workersCount*110;

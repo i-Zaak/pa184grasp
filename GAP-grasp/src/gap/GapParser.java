@@ -1,10 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-//gap12.txt - problems 1,3
-//gap9.txt - problem 3
-//wrong count of numbers -> fixed?
 package gap;
 
 import java.io.BufferedReader;
@@ -13,7 +6,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-
+/**
+ * Class used for reading the input from a file and initializing the values in
+ * data structures.
+ */
 public class GapParser {
 
     File file;
