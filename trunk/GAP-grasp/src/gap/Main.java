@@ -166,7 +166,7 @@ public class Main {
             }
         }
         if(generateOutput){
-            generateReport();
+            generateReport(outputPrefix);
         }
 
 
@@ -252,8 +252,57 @@ public class Main {
         }
     }
 
-    public static void generateReport(){
-        System.out.println("Output generation is work in progress");
+    public static void generateReport(String outputPrefix){
+        GapSolution gs = myProblem.getSolution();
+        GapSettings settings = gs.getSettings();
+
+        String report = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"";
+        report += "\n\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">";
+        report += "\n<html>";
+        report += "\n<head>";
+        report += "\n<title>GAP results</title>";
+        report += "\n<meta http-equiv=\"Content-Language\" content=\"en\" />";
+        report += "\n<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />";
+        report += "\n</head>";
+        report += "\n<body>";
+        report += "\n<h1>GAP solution report</h1>";
+        report += "\n<p>Total Cost: <emph>" + gs.getGlobalCost() + "</emph></p>";
+        report += "\n<table>";
+        
+        report += "\n  <tr><td>worker</td><td>jobs</td><td> used time</td></tr>";
+        for (int i=0; i < gs.getWorkersCount(); i++) {
+            report += "\n  <tr><td>" + i + "</td><td>";
+            for (int j=0; j < gs.getJobsCount(); j++) {
+                if (gs.getWorker(j) == i) {
+                    report += j + " ";
+                }
+            }
+            report += "</td><td>" ;
+            report += gs.getWorkerTime(i) + "/" + settings.getLimitTime(i) ;
+            report += "</td></tr>";
+
+        }
+        report += "\n</table>";
+        report += "\n<img src=\"solution.svg\" width=\"800\"/>";
+        report += "\n</body>";
+
+
+
+        try {
+            FileWriter fstream = new FileWriter(outputPrefix + "solution.svg");
+            BufferedWriter out = new BufferedWriter(fstream);
+            out.write(myProblem.getSolution().toSVG());
+            out.close();
+            fstream = new FileWriter(outputPrefix + "report.html");
+            out = new BufferedWriter(fstream);
+            out.write(report);
+            out.close();
+        } catch (IOException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
+        System.out.println("Output saved.");
     }
     
         public static void generateTimeGreedySolution() {

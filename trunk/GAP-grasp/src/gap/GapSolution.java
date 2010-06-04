@@ -331,7 +331,10 @@ public class GapSolution {
         int height = workersCount * 110;
 
         String result = "<?xml version=\"1.0\"?>";
-        result += "\n<svg width=\"" + width + "\" height=\"" + (height + 300) + "\">";
+        result += "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"";
+        result += "\n\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">";
+        result += "\n<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\"";
+        result += "\nwidth=\"" + width + "\" height=\"" + (height + 300) + "\">";
         result += "\n<desc>GAP solution</desc>";
         result += "\n<g transform=\"translate(50,50)\">";
 
@@ -376,7 +379,12 @@ public class GapSolution {
             }
         }
         result += "\n</g>";
-        result += "\n</svg>";
+
+        for(int i=0; i< workersCount; i++){
+            int y = i*110 + 160;
+            result += "<text x=\"3\"  y=\""+ y +"\" style=\"font-size: 34px;\">"+ i +"</text>";
+        }
+     	result += "\n</svg>";
         return result;
     }
 
